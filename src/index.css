@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ink-950 text-bone-200 font-mono antialiased;
+    /* 极淡扫描线纹理 */
+    background-image: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.012) 1px,
+        transparent 1px
+      );
+    background-size: 100% 3px;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* 自定义滚动条 */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e1e24;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2a2a32;
+  }
+
+  input,
+  textarea,
+  button {
+    @apply font-mono;
+  }
+
+  /* 防止 iOS 输入聚焦时缩放 */
+  input,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .hairline {
+    @apply border-ink-600;
+  }
+
+  .field {
+    @apply w-full bg-transparent border border-ink-600 px-3 py-3
+           text-bone-100 placeholder:text-bone-400
+           focus:outline-none focus:border-bone-300 transition-colors;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center
+           px-3 py-2 text-xs uppercase tracking-[0.2em] text-bone-200
+           border border-ink-600 hover:border-bone-300 hover:text-bone-100
+           active:translate-y-px transition-colors select-none;
+    min-height: 44px;
+  }
+
+  .btn-primary {
+    @apply text-bone-100 border-bone-300;
+  }
+
+  .blink::after {
+    content: '_';
+    @apply ml-0.5 animate-pulse text-signal-green;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}

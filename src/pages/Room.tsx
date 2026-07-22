@@ -132,6 +132,27 @@ function TopBar({
   onBurn: () => void
 }) {
   const status = useStatusLabel(conn, peerOnline)
+  const [copied, setCopied] = useState(false)
+
+  const onCopyLink = async () => {
+    const url = `${window.location.origin}/?room=${roomId}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // 降级：选中文本
+      const ta = document.createElement('textarea')
+      ta.value = url
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <header className="border-b hairline px-4 py-3 flex items-center gap-3 mx-auto w-full max-w-[640px]">
       <div className="flex items-center gap-2 min-w-0">
@@ -143,6 +164,13 @@ function TopBar({
       <div className="flex-1 text-center text-[10px] tracking-[0.2em] uppercase text-bone-400">
         {status.text}
       </div>
+      <button
+        onClick={onCopyLink}
+        className="text-[10px] tracking-[0.3em] uppercase text-bone-300 hover:text-bone-100 px-2 py-1"
+        aria-label="复制邀请链接"
+      >
+        {copied ? 'copied' : 'invite'}
+      </button>
       <button
         onClick={onBurn}
         className="text-[10px] tracking-[0.3em] uppercase text-signal-red/80 hover:text-signal-red px-2 py-1"

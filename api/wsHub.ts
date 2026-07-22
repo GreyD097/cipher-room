@@ -32,14 +32,17 @@ export class CipherHub {
   }
 
   private handleConnection(ws: WebSocket, url: string) {
+    this.log(`connect ${url}`)
     // 解析房间号：/ws/r/:roomId
     const m = url.match(/^\/ws\/r\/([A-Za-z0-9_-]{1,64})/)
     if (!m) {
+      this.log(`bad room url=${url}`)
       this.send(ws, { t: 'error', reason: 'banned' })
       ws.close(4000, 'bad room')
       return
     }
     const roomId = m[1]
+    this.log(`join room=${roomId}`)
     const entry = this.rooms.get(roomId) ?? { sockets: new Set<WebSocket>() }
     if (entry.sockets.size >= MAX_PEERS) {
       this.send(ws, { t: 'error', reason: 'full' })
@@ -48,6 +51,7 @@ export class CipherHub {
     }
     entry.sockets.add(ws)
     this.rooms.set(roomId, entry)
+    this.log(`room=${roomId} peers=${entry.sockets.size}`)
 
     // 限流：滑动窗口
     let tokens = RATE_LIMIT
@@ -82,6 +86,7 @@ export class CipherHub {
     const cleanup = () => {
       if (!entry.sockets.has(ws)) return
       entry.sockets.delete(ws)
+      this.log(`leave room=${roomId} peers=${entry.sockets.size}`)
       this.broadcast(entry, ws, { t: 'peer', online: false })
       if (entry.sockets.size === 0) this.rooms.delete(roomId)
     }

@@ -99,6 +99,7 @@ export const useChat = create<ChatState>((set, get) => ({
         } else if (msg.t === 'peer') {
           set({ peerOnline: msg.online })
           if (msg.online) set({ conn: 'paired' })
+          else if (!msg.online) set({ conn: 'waiting' })
         } else if (msg.t === 'data') {
           const env = envFromB64(msg.payloadB64) as Envelope
           await get()._onEnvelope(env)
@@ -110,7 +111,7 @@ export const useChat = create<ChatState>((set, get) => ({
       }
     }
     socket.onclose = () => {
-      set({ conn: 'closed' })
+      set({ conn: 'closed', peerOnline: false })
     }
     socket.onerror = () => {
       set({ conn: 'error', error: 'socket' })

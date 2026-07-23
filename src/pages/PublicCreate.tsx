@@ -55,7 +55,7 @@ export default function PublicCreate() {
   }
 
   const goBack = () => {
-    navigate('/public')
+    navigate('/')
   }
 
   return (
@@ -66,7 +66,7 @@ export default function PublicCreate() {
             onClick={goBack}
             className="text-[10px] tracking-[0.2em] uppercase text-bone-400 hover:text-bone-200 px-2 py-1"
           >
-            ← 返回
+            ← 主页
           </button>
           <div className="flex-1">
             <div className="text-[10px] tracking-[0.4em] text-bone-500 uppercase">创建公共聊天室</div>

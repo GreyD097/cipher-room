@@ -126,9 +126,16 @@ export default function Room() {
     }
   }
 
+  const onLeave = () => {
+    destroy()
+    sessionStorage.removeItem('cipher:pass')
+    sessionStorage.removeItem('cipher:room')
+    navigate('/')
+  }
+
   return (
     <main className="h-full flex flex-col bg-ink-950 safe-top safe-bottom">
-      <TopBar roomId={roomId} conn={conn} peerOnline={peerOnline} onBurn={onBurn} />
+      <TopBar roomId={roomId} conn={conn} peerOnline={peerOnline} onBurn={onBurn} onLeave={onLeave} />
 
       {error === 'passphrase-mismatch' && (
         <Banner type="warn">对方口令与你不同，无法解密消息</Banner>
@@ -176,11 +183,13 @@ function TopBar({
   conn,
   peerOnline,
   onBurn,
+  onLeave,
 }: {
   roomId: string
   conn: string
   peerOnline: boolean
   onBurn: () => void
+  onLeave: () => void
 }) {
   const status = useStatusLabel(conn, peerOnline)
   const [copied, setCopied] = useState(false)
@@ -221,6 +230,13 @@ function TopBar({
         aria-label="复制邀请链接"
       >
         {copied ? '已复制' : '邀请'}
+      </button>
+      <button
+        onClick={onLeave}
+        className="text-[10px] tracking-[0.3em] uppercase text-bone-300 hover:text-bone-100 px-2 py-1"
+        aria-label="返回主页"
+      >
+        主页
       </button>
       <button
         onClick={onBurn}

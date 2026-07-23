@@ -36,14 +36,14 @@ export class PublicHub {
 
   private handleConnection(ws: WebSocket, url: string) {
     this.log(`public connect ${url}`)
-    const m = url.match(/^\/ws\/p\/([^?]+)\?(.+)$/)
+    const m = url.match(/^\/ws\/p\/([^?]+)(?:\?(.+))?$/)
     if (!m) {
       this.send(ws, { t: 'error', reason: 'bad room' })
       ws.close(4000, 'bad room')
       return
     }
     const roomId = decodeURIComponent(m[1]).slice(0, 128)
-    const params = new URLSearchParams(m[2])
+    const params = new URLSearchParams(m[2] || '')
     const nickname = (params.get('nick') || '').slice(0, 32) || 'anonymous'
     const sid = params.get('sid') || ''
 

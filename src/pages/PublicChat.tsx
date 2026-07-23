@@ -28,9 +28,10 @@ export default function PublicChat() {
   useEffect(() => {
     document.title = `公共聊天室 · ${roomId}`
     const savedNick = localStorage.getItem(`cipher:pub-nick:${roomId}`) || ''
-    setNickname(savedNick || 'anonymous')
-    setNewNickname(savedNick || 'anonymous')
-    connect()
+    const nick = savedNick || 'anonymous'
+    setNickname(nick)
+    setNewNickname(nick)
+    connect(nick)
     return () => {
       if (socketRef.current) {
         socketRef.current.close()
@@ -39,13 +40,13 @@ export default function PublicChat() {
     }
   }, [roomId])
 
-  const connect = () => {
-    if (!nickname) return
+  const connect = (nick: string) => {
+    if (!nick) return
     setConn('connecting')
     setError('')
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    const url = `${proto}//${host}/ws/p/${encodeURIComponent(roomId)}?nick=${encodeURIComponent(nickname)}&sid=${sidRef.current}`
+    const url = `${proto}//${host}/ws/p/${encodeURIComponent(roomId)}?nick=${encodeURIComponent(nick)}&sid=${sidRef.current}`
     const socket = new WebSocket(url)
 
     socket.onopen = () => {
@@ -124,18 +125,19 @@ export default function PublicChat() {
 
   const onSaveNick = () => {
     if (!newNickname.trim()) return
-    localStorage.setItem(`cipher:pub-nick:${roomId}`, newNickname.trim())
-    setNickname(newNickname.trim())
+    const nick = newNickname.trim()
+    localStorage.setItem(`cipher:pub-nick:${roomId}`, nick)
+    setNickname(nick)
     setShowNickEdit(false)
     if (socketRef.current) {
       socketRef.current.close()
       socketRef.current = null
     }
-    connect()
+    connect(nick)
   }
 
   const goBack = () => {
-    navigate('/public')
+    navigate('/')
   }
 
   return (
@@ -145,7 +147,7 @@ export default function PublicChat() {
           onClick={goBack}
           className="text-[10px] tracking-[0.2em] uppercase text-bone-400 hover:text-bone-200 px-2 py-1"
         >
-          ← 返回
+          ← 主页
         </button>
         <div className="flex-1">
           <div className="text-[10px] tracking-[0.4em] text-bone-500 uppercase">公共聊天室</div>

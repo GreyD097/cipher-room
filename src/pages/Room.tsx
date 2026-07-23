@@ -108,8 +108,8 @@ export default function Room() {
       >
         {visible.length === 0 && (
           <div className="text-center text-[11px] text-bone-400 mt-12 leading-relaxed">
-            <p className="mb-1 tracking-[0.3em] uppercase">— nothing here —</p>
-            <p>60 秒后消息会自动消失</p>
+            <p className="mb-1 tracking-[0.3em] uppercase">— 暂无消息 —</p>
+          <p>60 秒后消息会自动消失</p>
           </div>
         )}
         {visible.map((it) => (
@@ -168,7 +168,7 @@ function TopBar({
       <div className="flex items-center gap-2 min-w-0">
         <span className={['inline-block w-1.5 h-1.5 rounded-full', status.dot].join(' ')} />
         <span className="text-[10px] tracking-[0.3em] uppercase text-bone-300 truncate">
-          room · {roomId}
+          房间 · {roomId}
         </span>
       </div>
       <div className="flex-1 text-center text-[10px] tracking-[0.2em] uppercase text-bone-400">
@@ -179,25 +179,25 @@ function TopBar({
         className="text-[10px] tracking-[0.3em] uppercase text-bone-300 hover:text-bone-100 px-2 py-1"
         aria-label="复制邀请链接"
       >
-        {copied ? 'copied' : 'invite'}
+        {copied ? '已复制' : '邀请'}
       </button>
       <button
         onClick={onBurn}
         className="text-[10px] tracking-[0.3em] uppercase text-signal-red/80 hover:text-signal-red px-2 py-1"
         aria-label="销毁密室"
       >
-        burn
+        销毁
       </button>
     </header>
   )
 }
 
 function useStatusLabel(conn: string, peerOnline: boolean): { text: string; dot: string } {
-  if (conn === 'connecting') return { text: 'connecting', dot: 'bg-signal-amber animate-pulse' }
-  if (conn === 'error') return { text: 'error', dot: 'bg-signal-red' }
-  if (conn === 'closed') return { text: 'closed', dot: 'bg-ink-500' }
-  if (!peerOnline) return { text: 'awaiting peer', dot: 'bg-signal-amber animate-pulse' }
-  return { text: 'paired', dot: 'bg-signal-green' }
+  if (conn === 'connecting') return { text: '连接中', dot: 'bg-signal-amber animate-pulse' }
+  if (conn === 'error') return { text: '错误', dot: 'bg-signal-red' }
+  if (conn === 'closed') return { text: '已断开', dot: 'bg-ink-500' }
+  if (!peerOnline) return { text: '等待对方', dot: 'bg-signal-amber animate-pulse' }
+  return { text: '已配对', dot: 'bg-signal-green' }
 }
 
 function Banner({ type, children }: { type: 'warn' | 'info'; children: React.ReactNode }) {
@@ -230,7 +230,7 @@ function Bubble({ item, myId }: { item: ChatItem; myId: string }) {
           ].join(' ')}
         >
           <span>{formatTime(item.ts)}</span>
-          {isMine && <span>· {item.acked === 'read' ? 'read' : 'sent'}</span>}
+          {isMine && <span>· {item.acked === 'read' ? '已读' : '已送达'}</span>}
           <span>· -{item.left}s</span>
         </div>
       </div>
@@ -298,7 +298,7 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
           disabled={disabled || !value.trim()}
           className="btn btn-primary px-4"
         >
-          send ↵
+          发送 ↵
         </button>
       </div>
     </div>

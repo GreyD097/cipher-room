@@ -47,12 +47,17 @@ export default function Unlock() {
         <h1 className="text-2xl text-bone-100 tracking-tightest mb-1">
           cipher<em className="not-italic text-signal-green">.</em>room
         </h1>
-        <p className="text-xs text-bone-400 mb-8 leading-relaxed">
-          输入双方约定的口令进入密室。消息在你的设备上加密，到期自动消失，服务器只转发密文。
+        <p className="text-xs text-bone-400 mb-4 leading-relaxed">
+          一个仅供两人使用的加密密室。消息在你的设备上加密后发出，服务器只转发密文、不存储任何数据；每条消息 60 秒后自动从双方界面与内存中销毁。
         </p>
+        <ul className="text-[11px] text-bone-400 mb-8 leading-relaxed space-y-0.5">
+          <li>· 端到端加密（AES-256-GCM + PBKDF2）</li>
+          <li>· 每个房间上限 2 人，需相同口令才能解密</li>
+          <li>· 离开页面即销毁，不留痕迹</li>
+        </ul>
 
         <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
-          shared passphrase
+          双方口令
         </label>
         <div className="relative">
           <input
@@ -75,7 +80,7 @@ export default function Unlock() {
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] tracking-[0.2em] text-bone-400 px-2 py-1"
             aria-label="切换明文"
           >
-            {show ? 'hide' : 'show'}
+            {show ? '隐藏' : '显示'}
           </button>
         </div>
 
@@ -98,7 +103,7 @@ export default function Unlock() {
           disabled={busy || locked || pass.length < 6}
           className="btn btn-primary w-full mt-6"
         >
-          {busy ? 'loading…' : 'enter  →'}
+          {busy ? '加载中…' : '进入  →'}
         </button>
 
         <div className="mt-6 text-[10px] text-bone-400 leading-relaxed">

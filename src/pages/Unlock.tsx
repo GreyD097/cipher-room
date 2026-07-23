@@ -23,6 +23,7 @@ export default function Unlock() {
   const [nickname, setNickname] = useState(init.nickname)
   const [avatar, setAvatar] = useState(init.avatar)
   const [token, setToken] = useState(init.token)
+  const [customRoom, setCustomRoom] = useState('')
   const [search] = useSearchParams()
   const navigate = useNavigate()
 
@@ -59,7 +60,7 @@ export default function Unlock() {
       return
     }
     setBusy(true)
-    const roomId = paramsRoom || randomRoomId()
+    const roomId = paramsRoom || customRoom.trim() || randomRoomId()
     sessionStorage.setItem('cipher:pass', pass)
     sessionStorage.setItem('cipher:room', roomId)
     saveProfile(nickname, avatar, token)
@@ -197,6 +198,27 @@ export default function Unlock() {
               <p className="mt-1 text-[10px] text-bone-500">
                 留空即使用免费模式
               </p>
+            </div>
+
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
+                房间号
+              </label>
+              <input
+                type="text"
+                value={customRoom}
+                onChange={(e) => setCustomRoom(e.target.value.slice(0, 128))}
+                disabled={!token}
+                placeholder={token ? '输入自定义房间号' : '需 VIP 令牌才能自定义'}
+                className="field disabled:opacity-40"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {token && (
+                <p className="mt-1 text-[10px] text-bone-500">
+                  留空则随机生成
+                </p>
+              )}
             </div>
           </div>
         )}

@@ -48,12 +48,12 @@ export default function Unlock() {
           cipher<em className="not-italic text-signal-green">.</em>room
         </h1>
         <p className="text-xs text-bone-400 mb-4 leading-relaxed">
-          一个仅供两人使用的加密密室。消息在你的设备上加密后发出，服务器只转发密文、不存储任何数据；每条消息 60 秒后自动从双方界面与内存中销毁。
+          一个仅供两人使用的加密密室。你和对方输入相同口令即可进入同一个房间，消息发出前已加密，服务器看不到内容。
         </p>
         <ul className="text-[11px] text-bone-400 mb-8 leading-relaxed space-y-0.5">
-          <li>· 端到端加密（AES-256-GCM + PBKDF2）</li>
-          <li>· 每个房间上限 2 人，需相同口令才能解密</li>
-          <li>· 离开页面即销毁，不留痕迹</li>
+          <li>· 每个房间上限 2 人，口令相同才能对话</li>
+          <li>· 消息 60 秒后自动消失，离开页面即销毁</li>
+          <li>· 不留记录，服务器不存储任何内容</li>
         </ul>
 
         <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">

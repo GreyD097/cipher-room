@@ -208,17 +208,14 @@ export default function Unlock() {
                 type="text"
                 value={customRoom}
                 onChange={(e) => setCustomRoom(e.target.value.slice(0, 128))}
-                disabled={!token}
-                placeholder={token ? '输入自定义房间号' : '需 VIP 令牌才能自定义'}
-                className="field disabled:opacity-40"
+                placeholder="输入自定义房间号，留空则随机生成"
+                className="field"
                 autoComplete="off"
                 spellCheck={false}
               />
-              {token && (
-                <p className="mt-1 text-[10px] text-bone-500">
-                  留空则随机生成
-                </p>
-              )}
+              <p className="mt-1 text-[10px] text-bone-500">
+                VIP 令牌用户可自定义任意房间号
+              </p>
             </div>
           </div>
         )}

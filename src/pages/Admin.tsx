@@ -5,11 +5,20 @@ interface RoomInfo {
   peers: number
 }
 
+interface PublicRoomInfo {
+  roomId: string
+  name: string
+  peers: number
+  messages: number
+}
+
 export default function Admin() {
   const [secret, setSecret] = useState('')
   const [authed, setAuthed] = useState(false)
   const [rooms, setRooms] = useState<RoomInfo[]>([])
+  const [publicRooms, setPublicRooms] = useState<PublicRoomInfo[]>([])
   const [err, setErr] = useState('')
+  const [newKey, setNewKey] = useState('')
 
   useEffect(() => {
     const saved = localStorage.getItem('cipher:admin-secret')
@@ -40,6 +49,13 @@ export default function Admin() {
       .catch(() => {})
   }
 
+  const refreshPublicRooms = () => {
+    fetch('/api/admin/public-rooms', { headers: { 'x-admin-secret': secret } })
+      .then((r) => r.json())
+      .then((d) => setPublicRooms(d.rooms))
+      .catch(() => {})
+  }
+
   const onKick = (roomId: string) => {
     if (!confirm(`确定踢掉房间 ${roomId}？`)) return
     fetch(`/api/admin/kick/${encodeURIComponent(roomId)}`, {
@@ -50,11 +66,35 @@ export default function Admin() {
       .catch(() => {})
   }
 
+  const onKickPublic = (roomId: string) => {
+    if (!confirm(`确定踢掉公共聊天室 ${roomId}？`)) return
+    fetch(`/api/admin/kick-public/${encodeURIComponent(roomId)}`, {
+      method: 'POST',
+      headers: { 'x-admin-secret': secret },
+    })
+      .then(() => refreshPublicRooms())
+      .catch(() => {})
+  }
+
+  const onGenKey = () => {
+    fetch('/api/admin/gen-key', {
+      method: 'POST',
+      headers: { 'x-admin-secret': secret },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        setNewKey(d.key || '')
+        setTimeout(() => setNewKey(''), 30000)
+      })
+      .catch(() => {})
+  }
+
   const onLogout = () => {
     localStorage.removeItem('cipher:admin-secret')
     setAuthed(false)
     setSecret('')
     setRooms([])
+    setPublicRooms([])
   }
 
   if (!authed) {
@@ -144,6 +184,71 @@ export default function Admin() {
           </div>
         </section>
 
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[12px] tracking-[0.3em] uppercase text-bone-300">
+              公共聊天室
+            </h2>
+            <button
+              onClick={refreshPublicRooms}
+              className="text-[10px] tracking-[0.2em] uppercase text-bone-400 hover:text-bone-200"
+            >
+              刷新
+            </button>
+          </div>
+          <div className="border hairline divide-y divide-ink-700">
+            {publicRooms.length === 0 && (
+              <div className="px-4 py-6 text-center text-[12px] text-bone-500">
+                暂无公共聊天室
+              </div>
+            )}
+            {publicRooms.map((r) => (
+              <div
+                key={r.roomId}
+                className="px-4 py-3 flex items-center justify-between"
+              >
+                <div>
+                  <div className="text-bone-100 text-[13px]">{r.name}</div>
+                  <div className="text-[10px] text-bone-500 font-mono">{r.roomId}</div>
+                  <div className="text-[10px] text-bone-500 tracking-wider uppercase mt-0.5">
+                    {r.peers} 人在线 · {r.messages} 条消息
+                  </div>
+                </div>
+                <button
+                  onClick={() => onKickPublic(r.roomId)}
+                  className="text-[10px] tracking-[0.2em] uppercase text-signal-red/80 hover:text-signal-red px-2 py-1"
+                >
+                  踢掉
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-[12px] tracking-[0.3em] uppercase text-bone-300 mb-3">
+            创建密钥
+          </h2>
+          <div className="border hairline p-4">
+            <p className="text-[11px] text-bone-400 mb-3">
+              生成一次性密钥，用于创建公共聊天室。每个密钥只能使用一次。
+            </p>
+            {newKey ? (
+              <div className="mb-3">
+                <div className="text-[10px] text-bone-500 mb-1">新密钥（30秒后自动隐藏）</div>
+                <div className="bg-ink-900 px-3 py-2 text-[14px] font-mono text-signal-green break-all">
+                  {newKey}
+                </div>
+              </div>
+            ) : null}
+            <button
+              onClick={onGenKey}
+              className="btn btn-primary text-[10px] tracking-[0.2em]"
+            >
+              生成密钥
+            </button>
+          </div>
+        </section>
 
       </div>
     </main>

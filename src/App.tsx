@@ -1,8 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import Home from '@/pages/Home'
 import Unlock from '@/pages/Unlock'
 import Room from '@/pages/Room'
 import Admin from '@/pages/Admin'
 import Lock from '@/pages/Lock'
+import PublicList from '@/pages/PublicList'
+import PublicCreate from '@/pages/PublicCreate'
+import PublicChat from '@/pages/PublicChat'
 import { hasLock } from '@/lib/lock'
 
 function LockGuard({ children }: { children: React.ReactNode }) {
@@ -24,6 +28,14 @@ export default function App() {
             path="/"
             element={
               <LockGuard>
+                <Home />
+              </LockGuard>
+            }
+          />
+          <Route
+            path="/unlock"
+            element={
+              <LockGuard>
                 <Unlock />
               </LockGuard>
             }
@@ -33,6 +45,30 @@ export default function App() {
             element={
               <LockGuard>
                 <Room />
+              </LockGuard>
+            }
+          />
+          <Route
+            path="/public"
+            element={
+              <LockGuard>
+                <PublicList />
+              </LockGuard>
+            }
+          />
+          <Route
+            path="/public/create"
+            element={
+              <LockGuard>
+                <PublicCreate />
+              </LockGuard>
+            }
+          />
+          <Route
+            path="/public/:roomId"
+            element={
+              <LockGuard>
+                <PublicChat />
               </LockGuard>
             }
           />

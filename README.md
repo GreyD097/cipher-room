@@ -4,12 +4,11 @@
 
 > An end-to-end encrypted private chat tool with 2-person cipher rooms and multi-user public chat rooms.
 
-[![GitHub Release](https://img.shields.io/github/v/release/GreyD097/cipher-room)](https://github.com/GreyD097/cipher-room/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/GreyD097/cipher-room)](https://github.com/GreyD097/cipher-room/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/GreyD097/cipher-room)](https://github.com/GreyD097/cipher-room/network/members)
-[![GitHub Issues](https://img.shields.io/github/issues/GreyD097/cipher-room)](https://github.com/GreyD097/cipher-room/issues)
-[![GitHub License](https://img.shields.io/github/license/GreyD097/cipher-room)](https://github.com/GreyD097/cipher-room/blob/master/LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/GreyD097/cipher-room)](https://github.com/GreyD097/cipher-room/commits/master)
+[![最新版本](https://img.shields.io/github/v/release/GreyD097/cipher-room?label=最新版本)](https://github.com/GreyD097/cipher-room/releases)
+[![收藏](https://img.shields.io/github/stars/GreyD097/cipher-room?label=收藏)](https://github.com/GreyD097/cipher-room/stargazers)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Express](https://img.shields.io/badge/Express-4-000000?logo=express)](https://expressjs.com)
 
 ---
 

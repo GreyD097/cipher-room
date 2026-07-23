@@ -1,17 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { randomRoomId } from '@/lib/cipher'
-import { AVATAR_PRESETS } from '@/lib/store'
-
-function loadProfile(): { nickname: string; avatar: string } {
-  try {
-    const nickname = localStorage.getItem('cipher:nick') || ''
-    const avatar = localStorage.getItem('cipher:avatar') || AVATAR_PRESETS[0]
-    return { nickname, avatar }
-  } catch {
-    return { nickname: '', avatar: AVATAR_PRESETS[0] }
-  }
-}
+import { setLockPassword, removeLock, hasLock, checkLockPassword } from '@/lib/lock'
 
 export default function Unlock() {
   const [pass, setPass] = useState('')
@@ -19,41 +9,32 @@ export default function Unlock() {
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const init = useMemo(loadProfile, [])
-  const [nickname, setNickname] = useState(init.nickname)
-  const [avatar, setAvatar] = useState(init.avatar)
+  const [lockPass, setLockPass] = useState('')
+  const [lockConfirm, setLockConfirm] = useState('')
+  const [lockShow, setLockShow] = useState(false)
+  const [lockMsg, setLockMsg] = useState('')
   const [search] = useSearchParams()
   const navigate = useNavigate()
 
   const paramsRoom = search.get('room') || ''
   const strength = useMemo(() => scorePass(pass), [pass])
+  const locked = hasLock()
 
   // 失败次数限制（仅前端防御）
   const [fails, setFails] = useState(0)
-  const locked = fails >= 5
+  const inputLocked = fails >= 5
 
   useEffect(() => {
-    // 进入页即伪装标题
     document.title = '计算器'
     const fav = document.querySelector("link[rel='icon']") as HTMLLinkElement | null
     if (fav)
       fav.href =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%230A0A0B"/><text x="50%" y="55%" text-anchor="middle" font-family="monospace" font-size="32" fill="%23EDEDED" dominant-baseline="middle">±</text></svg>'
-    // URL 带房间号时自动填入
     if (paramsRoom) setRoomId(paramsRoom)
   }, [paramsRoom])
 
-  const saveProfile = (nick: string, av: string) => {
-    try {
-      localStorage.setItem('cipher:nick', nick)
-      localStorage.setItem('cipher:avatar', av)
-    } catch {
-      /* 忽略 */
-    }
-  }
-
   const onEnter = async () => {
-    if (busy || locked) return
+    if (busy || inputLocked) return
     if (pass.length < 6) {
       setFails((n) => n + 1)
       return
@@ -62,8 +43,45 @@ export default function Unlock() {
     const targetRoom = roomId.trim() || randomRoomId()
     sessionStorage.setItem('cipher:pass', pass)
     sessionStorage.setItem('cipher:room', targetRoom)
-    saveProfile(nickname, avatar)
     navigate(`/r/${targetRoom}`)
+  }
+
+  const onSetLock = async () => {
+    if (!lockPass.trim()) {
+      setLockMsg('请输入密码')
+      return
+    }
+    if (lockPass !== lockConfirm) {
+      setLockMsg('两次输入不一致')
+      return
+    }
+    if (lockPass.length < 4) {
+      setLockMsg('至少 4 位')
+      return
+    }
+    await setLockPassword(lockPass)
+    setLockMsg('安全锁已开启')
+    setLockPass('')
+    setLockConfirm('')
+    setTimeout(() => setLockMsg(''), 2000)
+  }
+
+  const onRemoveLock = async () => {
+    if (!lockPass.trim()) {
+      setLockMsg('请输入当前密码')
+      return
+    }
+    const ok = await checkLockPassword(lockPass)
+    if (!ok) {
+      setLockMsg('密码错误')
+      return
+    }
+    removeLock()
+    sessionStorage.removeItem('cipher:unlocked')
+    setLockMsg('安全锁已关闭')
+    setLockPass('')
+    setLockConfirm('')
+    setTimeout(() => setLockMsg(''), 2000)
   }
 
   return (
@@ -109,7 +127,7 @@ export default function Unlock() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') onEnter()
             }}
-            disabled={locked}
+            disabled={inputLocked}
             autoComplete="off"
             spellCheck={false}
             inputMode="text"
@@ -142,7 +160,7 @@ export default function Unlock() {
 
         <button
           onClick={onEnter}
-          disabled={busy || locked || pass.length < 6}
+          disabled={busy || inputLocked || pass.length < 6}
           className="btn btn-primary w-full mt-6"
         >
           {busy ? '加载中…' : '进入  →'}
@@ -159,40 +177,74 @@ export default function Unlock() {
           <div className="mt-4 space-y-4 border-t hairline pt-4">
             <div>
               <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
-                昵称
+                安全锁 {locked ? '（已开启）' : ''}
               </label>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value.slice(0, 16))}
-                placeholder="可不填，仅对方可见"
-                className="field"
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
-                头像颜色
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {AVATAR_PRESETS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setAvatar(c)}
-                    className={[
-                      'w-7 h-7 rounded-full transition-all',
-                      avatar === c
-                        ? 'ring-2 ring-bone-100 ring-offset-2 ring-offset-ink-950 scale-110'
-                        : 'opacity-70 hover:opacity-100',
-                    ].join(' ')}
-                    style={{ backgroundColor: c }}
-                    aria-label={`选择头像颜色 ${c}`}
+              {!locked ? (
+                <>
+                  <div className="relative">
+                    <input
+                      type={lockShow ? 'text' : 'password'}
+                      value={lockPass}
+                      onChange={(e) => setLockPass(e.target.value)}
+                      placeholder="设置安全锁密码"
+                      className="field pr-12"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setLockShow((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] tracking-[0.2em] text-bone-400 px-2 py-1"
+                    >
+                      {lockShow ? '隐藏' : '显示'}
+                    </button>
+                  </div>
+                  <input
+                    type={lockShow ? 'text' : 'password'}
+                    value={lockConfirm}
+                    onChange={(e) => setLockConfirm(e.target.value)}
+                    placeholder="确认密码"
+                    className="field mt-2"
+                    autoComplete="off"
+                    spellCheck={false}
                   />
-                ))}
-              </div>
+                  <button onClick={onSetLock} className="btn btn-primary w-full mt-3">
+                    开启安全锁
+                  </button>
+                  <p className="mt-1 text-[10px] text-bone-500">
+                    开启后每次进入网站需验证此密码，保护你的密室不被他人访问
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="relative">
+                    <input
+                      type={lockShow ? 'text' : 'password'}
+                      value={lockPass}
+                      onChange={(e) => setLockPass(e.target.value)}
+                      placeholder="输入当前密码以关闭"
+                      className="field pr-12"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setLockShow((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] tracking-[0.2em] text-bone-400 px-2 py-1"
+                    >
+                      {lockShow ? '隐藏' : '显示'}
+                    </button>
+                  </div>
+                  <button onClick={onRemoveLock} className="btn btn-danger w-full mt-3">
+                    关闭安全锁
+                  </button>
+                </>
+              )}
+              {lockMsg && (
+                <p className={`mt-2 text-[11px] ${locked ? 'text-signal-red' : 'text-signal-green'}`}>
+                  {lockMsg}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -203,10 +255,10 @@ export default function Unlock() {
           </p>
         </div>
 
-        {locked && (
+        {inputLocked && (
           <p className="mt-4 text-signal-red text-xs">尝试次数过多，请稍候。</p>
         )}
-        {fails > 0 && !locked && (
+        {fails > 0 && !inputLocked && (
           <p className="mt-4 text-signal-amber text-[11px]">错误 {fails}/5</p>
         )}
       </div>

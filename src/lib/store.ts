@@ -25,15 +25,10 @@ export type ConnState =
 export interface ChatItem {
   id: string
   text: string
-  /** 发送者身份标识 */
   sid: string
   ts: number
-  /** 阅后即焚倒计时秒数；0 表示已过期 */
   left: number
-  /** 送达/已读状态（仅自己发出时有） */
   acked?: 'sent' | 'read'
-  nickname?: string
-  avatar?: string
 }
 
 interface ChatState {
@@ -45,50 +40,18 @@ interface ChatState {
   items: ChatItem[]
   peerTyping: boolean
   error: string | null
-  /** rate 限流倒计时秒数；null 表示未限流 */
   rateLeft: number | null
-  /** 本地昵称 */
-  nickname: string
-  /** 本地头像（预设索引或颜色） */
-  avatar: string
   connect: (roomId: string, passphrase: string) => Promise<void>
   send: (text: string, sid: string) => Promise<void>
   wipe: () => void
   destroy: () => void
   tick: () => void
   typing: (on: boolean) => void
-  updateProfile: (nickname: string, avatar: string) => void
-  // 内部
   _openSocket: (roomId: string, cipher: CipherRoom) => void
   _onEnvelope: (env: Envelope) => Promise<void>
 }
 
 let typingTimer: number | null = null
-
-/** 预设头像（颜色标识，零存储） */
-export const AVATAR_PRESETS = [
-  '#f87171',
-  '#fb923c',
-  '#fbbf24',
-  '#a3e635',
-  '#34d399',
-  '#22d3ee',
-  '#60a5fa',
-  '#a78bfa',
-  '#f472b6',
-]
-
-function loadProfile(): { nickname: string; avatar: string } {
-  try {
-    const nickname = localStorage.getItem('cipher:nick') || ''
-    const avatar = localStorage.getItem('cipher:avatar') || AVATAR_PRESETS[0]
-    return { nickname, avatar }
-  } catch {
-    return { nickname: '', avatar: AVATAR_PRESETS[0] }
-  }
-}
-
-const initProfile = loadProfile()
 
 export const useChat = create<ChatState>((set, get) => ({
   roomId: null,
@@ -100,8 +63,6 @@ export const useChat = create<ChatState>((set, get) => ({
   peerTyping: false,
   error: null,
   rateLeft: null,
-  nickname: initProfile.nickname,
-  avatar: initProfile.avatar,
 
   connect: async (roomId, passphrase) => {
     set({ conn: 'connecting', error: null, items: [], peerOnline: false })
@@ -174,14 +135,12 @@ export const useChat = create<ChatState>((set, get) => ({
           items: [
             ...s.items,
             {
-              id: env.id,
-              text,
-              sid: env.sid,
-              ts: env.ts,
-              left: env.ttl,
-              nickname: env.nickname,
-              avatar: env.avatar,
-            },
+            id: env.id,
+            text,
+            sid: env.sid,
+            ts: env.ts,
+            left: env.ttl,
+          },
           ],
         }))
         // 回复已读
@@ -211,15 +170,13 @@ export const useChat = create<ChatState>((set, get) => ({
     if (!trimmed) return
     const cipher = get().cipher
     const socket = get().socket
-    const nickname = get().nickname
-    const avatar = get().avatar
     if (!cipher || !socket || socket.readyState !== WebSocket.OPEN) return
-    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, 60, nickname, avatar)
+    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, 60)
     socket.send(JSON.stringify({ t: 'pub', payloadB64: envToB64(env) }))
     set((s) => ({
       items: [
         ...s.items,
-        { id: env.id, text: trimmed, sid, ts: env.ts, left: 60, acked: 'sent', nickname, avatar },
+        { id: env.id, text: trimmed, sid, ts: env.ts, left: 60, acked: 'sent' },
       ],
     }))
   },
@@ -230,16 +187,6 @@ export const useChat = create<ChatState>((set, get) => ({
     socket.send(
       JSON.stringify({ t: 'pub', payloadB64: envToB64({ k: 'typing', on }) }),
     )
-  },
-
-  updateProfile: (nickname: string, avatar: string) => {
-    set({ nickname, avatar })
-    try {
-      localStorage.setItem('cipher:nick', nickname)
-      localStorage.setItem('cipher:avatar', avatar)
-    } catch {
-      /* 忽略 */
-    }
   },
 
   tick: () => {

@@ -78,6 +78,10 @@
     @apply text-bone-100 border-bone-300;
   }
 
+  .btn-danger {
+    @apply text-signal-red border-signal-red/50 hover:border-signal-red;
+  }
+
   .blink::after {
     content: '_';
     @apply ml-0.5 animate-pulse text-signal-green;

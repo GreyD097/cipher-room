@@ -1,165 +1,133 @@
-# cipher.room
+<div align="center">
 
-> 一个端对端加密的私密聊天工具，支持两人密室和多人公共聊天室。
+# 🔐 cipher.room
 
-> An end-to-end encrypted private chat tool with 2-person cipher rooms and multi-user public chat rooms.
+**说完了，就没了。**
+
+一个端对端加密的私密聊天工具。消息在离开你的屏幕之前就已经加密，服务器只负责转发乱码，连标点符号都看不懂。
 
 [![最新版本](https://img.shields.io/github/v/release/GreyD097/cipher-room?label=最新版本)](https://github.com/GreyD097/cipher-room/releases)
 [![收藏](https://img.shields.io/github/stars/GreyD097/cipher-room?label=收藏)](https://github.com/GreyD097/cipher-room/stargazers)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org)
-[![Express](https://img.shields.io/badge/Express-4-000000?logo=express)](https://expressjs.com)
+
+</div>
 
 ---
 
-## 简介 / Introduction
+## ✨ 两种聊天模式
 
-cipher.room 是一个注重隐私的实时聊天工具，所有消息在发送前已在本地加密，服务器只转发密文，无法读取内容。提供两种模式：仅供两人使用的加密密室，以及可多人参与的公共聊天室。
+### 🕯️ 密室聊天
 
-cipher.room is a privacy-focused real-time chat tool where all messages are encrypted locally before sending. The server only relays ciphertext and cannot read the content. Two modes are available: a 2-person encrypted cipher room, and a multi-user public chat room.
+适合说那些**不想留下任何痕迹**的话。
 
----
+- 🔒 **端到端加密** — 消息出浏览器前就已加密，服务器看到的是一团乱码
+- 👥 **仅限两人** — 第三个人连门都进不来
+- ⏱️ **60秒自毁** — 消息发出后一分钟自动消失，像从没存在过
+- 🚫 **零存储** — 服务器不存任何记录，全部在内存里，进程重启即清零
+- 🔗 **邀请链接** — 一键复制链接，对方点开只需输入口令
+- 🛡️ **截屏软防护** — 切窗口自动模糊、按 PrintScreen 清空消息、禁止右键和开发者工具
 
-## 功能特性 / Features
+### 🏛️ 公共聊天室
 
-### 密室 / Cipher Room
+适合一群人**正经聊天**，或者**不正经聊天**。
 
-| 功能 | 说明 |
-|------|------|
-| 端对端加密 | 消息在发送前用 AES-256-GCM 加密，服务器看不到内容 |
-| 两人上限 | 每个房间最多 2 人，第三人被拒绝 |
-| 阅后即焚 | 消息 60 秒后自动消失，离开页面即销毁 |
-| 无记录存储 | 服务器不存储任何消息，全部在内存中 |
-| 邀请链接 | 一键复制邀请链接，对方点击后只需输入口令 |
-| 截屏防护 | 离开窗口自动模糊消息，PrintScreen 清空消息 |
-
-### 公共聊天室 / Public Chat Room
-
-| 功能 | 说明 |
-|------|------|
-| 消息持久化 | 消息保留在服务器内存中，最多 1000 条 |
-| 昵称系统 | 每个房间独立设置昵称 |
-| 多人聊天 | 单房间最多 50 人在线 |
-| 历史记录 | 进入房间自动同步历史消息 |
-| 创建密钥 | 需管理员在后台生成一次性密钥才能创建 |
-
-### 通用 / General
-
-| 功能 | 说明 |
-|------|------|
-| 安全锁 | 可设置密码，每次进入网站需验证 |
-| 管理员后台 | 查看活跃房间、踢掉房间、生成创建密钥 |
-| 限流保护 | 30 条/秒，超出仅丢弃消息不踢人 |
+- 💬 **消息持久化** — 保留最近 1000 条消息，新加入的人能看到历史
+- 🏷️ **独立昵称** — 每个房间可以设不同的名字，不用注册账号
+- 👨‍👩‍👧‍👦 **最多50人** — 小型群聊，不会变成广场
+- 🔑 **创建需密钥** — 只有管理员能生成一次性密钥，防止房间泛滥
 
 ---
 
-## 页面结构 / Pages
-
-| 路径 | 功能 |
-|------|------|
-| `/` | 主页，选择密室或公共聊天室入口，管理安全锁 |
-| `/unlock` | 密室入口，输入房间号和口令 |
-| `/unlock?room=xxx` | 通过邀请链接进入，只需输入口令 |
-| `/r/:roomId` | 密室聊天页 |
-| `/public` | 公共聊天室列表 |
-| `/public/create` | 创建公共聊天室（需密钥） |
-| `/public/:roomId` | 公共聊天室聊天页 |
-| `/admin` | 管理员后台 |
-| `/lock` | 安全锁验证页 |
-
----
-
-## 技术架构 / Tech Stack
-
-### 前端 / Frontend
-
-- React 19 + TypeScript
-- Vite（构建工具）
-- Tailwind CSS
-- Zustand（状态管理）
-- Web Crypto API（端对端加密）
-
-### 后端 / Backend
-
-- Express + WebSocket（ws 库）
-- 双 WebSocket Hub：密室（`/ws/r/`）和公共聊天室（`/ws/p/`）
-- 内存存储，无数据库
-- 限流：令牌桶算法，30 条/秒
-
-### 加密方案 / Encryption
-
-- **密钥派生**：PBKDF2，250,000 次迭代，SHA-256
-- **盐值**：房间号的 SHA-256 哈希（确保同房间同口令双方密钥一致）
-- **加密算法**：AES-256-GCM
-- **密钥长度**：256 位
-
----
-
-## 本地运行 / Local Development
+## 🚀 快速开始
 
 ```bash
+# 克隆项目
+git clone https://github.com/GreyD097/cipher-room.git
+cd cipher-room
+
 # 安装依赖
 npm install
 
-# 启动开发服务器（前端 + 后端）
+# 启动开发服务器（前后端一起）
 npm run dev
 
-# 单独启动后端
+# 或者单独启动后端
 npm run server
-
-# 构建生产版本
-npm run build
 ```
 
-默认端口：
-- 前端：5173
-- 后端：3001
+访问 http://localhost:5173 即可使用。
 
 ---
 
-## 部署 / Deployment
+## 📱 页面导航
+
+| 路径 | 干什么 |
+|------|--------|
+| `/` | 主页，选密室还是公共聊天室，管理安全锁 |
+| `/unlock` | 进密室，输房间号和口令 |
+| `/unlock?room=xxx` | 被邀请的，直接输口令 |
+| `/r/:roomId` | 密室聊天中 |
+| `/public` | 逛逛有哪些公共聊天室 |
+| `/public/create` | 用密钥创建新聊天室 |
+| `/public/:roomId` | 公共聊天室开聊 |
+| `/admin` | 管理员后台 |
+| `/lock` | 安全锁验证 |
+
+---
+
+## 🔧 技术栈
+
+**前端**
+- React 19 + TypeScript
+- Vite + Tailwind CSS
+- Zustand（状态管理）
+- Web Crypto API（本地加密）
+
+**后端**
+- Express + WebSocket（ws 库）
+- 双 Hub 架构：密室 `/ws/r/` + 公共聊天室 `/ws/p/`
+- 纯内存存储，无数据库
+- 令牌桶限流：30 条/秒
+
+**加密方案**
+- PBKDF2 密钥派生，250,000 次迭代
+- 盐值 = 房间号的 SHA-256 哈希（确保双方密钥一致）
+- AES-256-GCM 加密
+
+---
+
+## 🌐 部署
 
 ### Render（推荐）
 
-本项目已配置 `render.yaml`，推送到 GitHub 后 Render 会自动部署。
+已配置 `render.yaml`，推送到 GitHub 后自动部署。
 
 环境变量：
-- `ADMIN_SECRET`：管理员后台口令（默认 `3068986342`）
-- `NODE_ENV`：`production`
+- `ADMIN_SECRET` — 管理员口令（默认 `3068986342`）
+- `NODE_ENV` — 设为 `production`
 
 ### Vercel
 
-前端部分可部署到 Vercel，`vercel.json` 已配置路由回退。后端 WebSocket 需要单独部署。
+前端可部署到 Vercel，`vercel.json` 已配置。WebSocket 后端需要单独部署。
 
 ---
 
-## 管理员后台 / Admin Panel
+## 🛡️ 安全说明
 
-访问 `/admin`，输入管理员口令（默认 `3068986342`，可通过环境变量 `ADMIN_SECRET` 覆盖）。
+> ⚠️ **重要提示**
+>
+> 密室聊天的安全性建立在**双方使用相同的房间号和口令**之上。如果口令泄露，第三方可以解密消息。请通过安全渠道（如面对面、Signal）分享口令。
 
-功能：
-- 查看活跃密室列表（在线人数）
-- 查看公共聊天室列表（在线人数、消息数）
-- 踢掉指定房间/聊天室
-- 生成一次性创建密钥（用于创建公共聊天室）
-
----
-
-## 安全说明 / Security Notes
-
-- **端对端加密**：密室消息在浏览器端加密，服务器只转发密文
-- **无持久化**：密室消息不存储，60 秒后自动销毁
-- **截屏软防护**：
-  - 按 PrintScreen 键清空本地消息
-  - 窗口失焦/切换标签页自动模糊消息
-  - 禁用右键和开发者工具快捷键
-  - 消息气泡禁止选择和拖拽
-- **安全锁**：可选设置，开启后每次进入网站需验证密码（存储在 localStorage，PBKDF2 + AES-GCM 加密）
-- **失败锁定**：口令输入错误 5 次后锁定
+- 密室消息在浏览器端完成加密和解密
+- 服务器只接收和转发密文，无法读取内容
+- 消息不写入磁盘，全部在内存中，60 秒后自动清理
+- 安全锁密码使用 PBKDF2 + AES-GCM 加密存储在本地
+- 连续 5 次输入错误口令将触发锁定
 
 ---
 
-## 项目结构 / Project Structure
+## 📂 项目结构
 
 ```
 .
@@ -171,19 +139,7 @@ npm run build
 │   └── index.ts            # Vercel 适配入口
 ├── src/
 │   ├── pages/              # 页面组件
-│   │   ├── Home.tsx        # 主页
-│   │   ├── Unlock.tsx      # 密室入口
-│   │   ├── Room.tsx        # 密室聊天
-│   │   ├── PublicList.tsx  # 公共聊天室列表
-│   │   ├── PublicCreate.tsx # 创建公共聊天室
-│   │   ├── PublicChat.tsx  # 公共聊天室聊天
-│   │   ├── Admin.tsx       # 管理员后台
-│   │   └── Lock.tsx        # 安全锁
-│   ├── lib/
-│   │   ├── cipher.ts       # 加密/解密逻辑
-│   │   ├── store.ts        # Zustand 状态管理
-│   │   ├── lock.ts         # 安全锁逻辑
-│   │   └── utils.ts        # 工具函数
+│   ├── lib/                # 加密、状态管理、工具函数
 │   ├── App.tsx             # 路由配置
 │   └── index.css           # 全局样式
 ├── render.yaml             # Render 部署配置
@@ -193,17 +149,17 @@ npm run build
 
 ---
 
-## 版本历史 / Changelog
+## 📜 版本历史
 
-| 版本 | 内容 |
-|------|------|
-| v1.3.0 | 新增公共聊天室、昵称系统、一次性密钥、邀请链接优化 |
+| 版本 | 更新内容 |
+|------|----------|
+| v1.3.0 | 公共聊天室、昵称系统、一次性密钥、邀请链接优化 |
 | v1.2.0 | 截屏防护、界面中文化 |
 | v1.1.0 | 修复限流和连接断开问题 |
-| v1.0.0 | 初始版本，密室端对端加密聊天 |
+| v1.0.0 | 初始版本，密室端到端加密聊天 |
 
 ---
 
 ## License
 
-MIT
+MIT — 随便用，但用了出事儿别找我。

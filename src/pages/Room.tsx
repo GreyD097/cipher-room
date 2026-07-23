@@ -195,7 +195,7 @@ function TopBar({
   const [copied, setCopied] = useState(false)
 
   const onCopyLink = async () => {
-    const url = `${window.location.origin}/?room=${roomId}`
+    const url = `${window.location.origin}/unlock?room=${roomId}`
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)

@@ -39,6 +39,8 @@ export default function Unlock() {
     navigate(`/r/${targetRoom}`)
   }
 
+  const invited = !!paramsRoom
+
   return (
     <main className="min-h-full flex flex-col items-stretch justify-center px-6 py-12 safe-top safe-bottom">
       <div className="w-full max-w-[420px] mx-auto">
@@ -54,28 +56,40 @@ export default function Unlock() {
         <h1 className="text-2xl text-bone-100 tracking-tightest mb-1">
           cipher<em className="not-italic text-signal-green">.</em>room
         </h1>
-        <p className="text-xs text-bone-400 mb-4 leading-relaxed">
-          一个仅供两人使用的加密密室。你和对方输入相同口令即可进入同一个房间，消息发出前已加密，服务器看不到内容。
-        </p>
-        <ul className="text-[11px] text-bone-400 mb-8 leading-relaxed space-y-0.5">
-          <li>· 每个房间上限 2 人，口令相同才能对话</li>
-          <li>· 消息 60 秒后自动消失，离开页面即销毁</li>
-          <li>· 不留记录，服务器不存储任何内容</li>
-        </ul>
+        {invited ? (
+          <p className="text-xs text-bone-400 mb-8 leading-relaxed">
+            邀请你加入房间 <span className="text-bone-100 font-mono">{roomId}</span>，输入口令进入。
+          </p>
+        ) : (
+          <>
+            <p className="text-xs text-bone-400 mb-4 leading-relaxed">
+              一个仅供两人使用的加密密室。你和对方输入相同口令即可进入同一个房间，消息发出前已加密，服务器看不到内容。
+            </p>
+            <ul className="text-[11px] text-bone-400 mb-8 leading-relaxed space-y-0.5">
+              <li>· 每个房间上限 2 人，口令相同才能对话</li>
+              <li>· 消息 60 秒后自动消失，离开页面即销毁</li>
+              <li>· 不留记录，服务器不存储任何内容</li>
+            </ul>
+          </>
+        )}
 
-        <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
-          房间号
-        </label>
-        <input
-          type="text"
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value.slice(0, 128))}
-          onKeyDown={(e) => e.key === 'Enter' && onEnter()}
-          placeholder="留空则随机生成"
-          className="field"
-          autoComplete="off"
-          spellCheck={false}
-        />
+        {!invited && (
+          <>
+            <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
+              房间号
+            </label>
+            <input
+              type="text"
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value.slice(0, 128))}
+              onKeyDown={(e) => e.key === 'Enter' && onEnter()}
+              placeholder="留空则随机生成"
+              className="field"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </>
+        )}
 
         <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2 mt-4">
           双方口令

@@ -65,14 +65,13 @@ export interface CipherRoom {
   fingerprint: string
 }
 
-export async function createCipher(passphrase: string): Promise<CipherRoom> {
-  const saltB64 = randomSaltB64()
-  const key = await deriveKey(passphrase, saltB64)
-  const fingerprint = await fingerprintOf(saltB64)
-  return { key, saltB64, fingerprint }
-}
-
-export async function joinCipher(passphrase: string, saltB64: string): Promise<CipherRoom> {
+export async function createCipher(passphrase: string, roomId: string): Promise<CipherRoom> {
+  // salt 由房间号确定性派生，确保同房间双方得到相同密钥
+  const roomIdBytes = new TextEncoder().encode(roomId)
+  const digest = await crypto.subtle.digest('SHA-256', roomIdBytes)
+  const hashBytes = new Uint8Array(digest)
+  const salt = hashBytes.subarray(0, SALT_LEN)
+  const saltB64 = toB64(salt)
   const key = await deriveKey(passphrase, saltB64)
   const fingerprint = await fingerprintOf(saltB64)
   return { key, saltB64, fingerprint }

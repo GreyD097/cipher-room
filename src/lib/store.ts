@@ -68,8 +68,8 @@ export const useChat = create<ChatState>((set, get) => ({
   connect: async (roomId, passphrase) => {
     set({ conn: 'connecting', error: null, items: [], peerOnline: false })
     try {
-      // 第一次连接：本地创建密室
-      const cipher = await createCipher(passphrase)
+      // 密钥由房间号 + 口令共同派生，确保同房间同口令的双方得到相同密钥
+      const cipher = await createCipher(passphrase, roomId)
       get()._openSocket(roomId, cipher)
     } catch (e) {
       set({ conn: 'error', error: msgOf(e) })

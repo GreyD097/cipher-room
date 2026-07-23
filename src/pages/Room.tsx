@@ -34,7 +34,6 @@ export default function Room() {
     document.title = `密室 · ${roomId}`
     const pass = sessionStorage.getItem('cipher:pass')
     const storedRoom = sessionStorage.getItem('cipher:room')
-    const token = localStorage.getItem('cipher:vip-token') || ''
     if (!pass) {
       navigate('/')
       return
@@ -42,7 +41,7 @@ export default function Room() {
     if (storedRoom !== roomId) {
       sessionStorage.setItem('cipher:room', roomId)
     }
-    connect(roomId, pass, token)
+    connect(roomId, pass)
     return () => {
       destroy()
       if (typingTimer.current) window.clearTimeout(typingTimer.current)

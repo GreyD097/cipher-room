@@ -47,13 +47,11 @@ interface ChatState {
   error: string | null
   /** rate 限流倒计时秒数；null 表示未限流 */
   rateLeft: number | null
-  /** VIP 信息（null 表示非 VIP） */
-  vip: { level: string; customRoom: boolean; ttl?: number } | null
   /** 本地昵称 */
   nickname: string
   /** 本地头像（预设索引或颜色） */
   avatar: string
-  connect: (roomId: string, passphrase: string, token?: string) => Promise<void>
+  connect: (roomId: string, passphrase: string) => Promise<void>
   send: (text: string, sid: string) => Promise<void>
   wipe: () => void
   destroy: () => void
@@ -61,7 +59,7 @@ interface ChatState {
   typing: (on: boolean) => void
   updateProfile: (nickname: string, avatar: string) => void
   // 内部
-  _openSocket: (roomId: string, cipher: CipherRoom, token?: string) => void
+  _openSocket: (roomId: string, cipher: CipherRoom) => void
   _onEnvelope: (env: Envelope) => Promise<void>
 }
 
@@ -102,26 +100,24 @@ export const useChat = create<ChatState>((set, get) => ({
   peerTyping: false,
   error: null,
   rateLeft: null,
-  vip: null,
   nickname: initProfile.nickname,
   avatar: initProfile.avatar,
 
-  connect: async (roomId, passphrase, token) => {
-    set({ conn: 'connecting', error: null, items: [], peerOnline: false, vip: null })
+  connect: async (roomId, passphrase) => {
+    set({ conn: 'connecting', error: null, items: [], peerOnline: false })
     try {
       // 密钥由房间号 + 口令共同派生，确保同房间同口令的双方得到相同密钥
       const cipher = await createCipher(passphrase, roomId)
-      get()._openSocket(roomId, cipher, token)
+      get()._openSocket(roomId, cipher)
     } catch (e) {
       set({ conn: 'error', error: msgOf(e) })
     }
   },
 
-  _openSocket: (roomId: string, cipher: CipherRoom, token?: string) => {
+  _openSocket: (roomId: string, cipher: CipherRoom) => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    const qs = token ? `?token=${encodeURIComponent(token)}` : ''
-    const url = `${proto}//${host}/ws/r/${encodeURIComponent(roomId)}${qs}`
+    const url = `${proto}//${host}/ws/r/${encodeURIComponent(roomId)}`
     const socket = new WebSocket(url)
     set({ socket, cipher, roomId })
 
@@ -131,12 +127,11 @@ export const useChat = create<ChatState>((set, get) => ({
     socket.onmessage = async (ev) => {
       try {
         const msg = JSON.parse(ev.data) as
-          | { t: 'welcome'; peers: number; ttl: number; vip: { level: string; customRoom: boolean; ttl?: number } | null }
+          | { t: 'welcome'; peers: number; ttl: number }
           | { t: 'peer'; online: boolean }
           | { t: 'data'; payloadB64: string }
           | { t: 'error'; reason: string }
         if (msg.t === 'welcome') {
-          if (msg.vip) set({ vip: msg.vip })
           if (msg.peers >= 1) set({ conn: 'paired', peerOnline: true })
           else set({ conn: 'waiting' })
         } else if (msg.t === 'peer') {
@@ -216,17 +211,15 @@ export const useChat = create<ChatState>((set, get) => ({
     if (!trimmed) return
     const cipher = get().cipher
     const socket = get().socket
-    const vip = get().vip
     const nickname = get().nickname
     const avatar = get().avatar
     if (!cipher || !socket || socket.readyState !== WebSocket.OPEN) return
-    const ttl = vip?.ttl ?? 60
-    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, ttl, nickname, avatar)
+    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, 60, nickname, avatar)
     socket.send(JSON.stringify({ t: 'pub', payloadB64: envToB64(env) }))
     set((s) => ({
       items: [
         ...s.items,
-        { id: env.id, text: trimmed, sid, ts: env.ts, left: ttl, acked: 'sent', nickname, avatar },
+        { id: env.id, text: trimmed, sid, ts: env.ts, left: 60, acked: 'sent', nickname, avatar },
       ],
     }))
   },
@@ -302,7 +295,6 @@ export const useChat = create<ChatState>((set, get) => ({
       peerTyping: false,
       error: null,
       rateLeft: null,
-      vip: null,
     })
   },
 }))

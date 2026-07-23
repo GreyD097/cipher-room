@@ -9,10 +9,6 @@ export default function Admin() {
   const [secret, setSecret] = useState('')
   const [authed, setAuthed] = useState(false)
   const [rooms, setRooms] = useState<RoomInfo[]>([])
-  const [tokenResult, setTokenResult] = useState('')
-  const [vipDays, setVipDays] = useState(30)
-  const [vipTtl, setVipTtl] = useState(300)
-  const [vipCustomRoom, setVipCustomRoom] = useState(true)
   const [err, setErr] = useState('')
 
   useEffect(() => {
@@ -54,28 +50,11 @@ export default function Admin() {
       .catch(() => {})
   }
 
-  const onIssue = () => {
-    fetch('/api/admin/issue-vip', {
-      method: 'POST',
-      headers: {
-        'x-admin-secret': secret,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ days: vipDays, ttl: vipTtl, customRoom: vipCustomRoom }),
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        setTokenResult(d.token)
-      })
-      .catch(() => {})
-  }
-
   const onLogout = () => {
     localStorage.removeItem('cipher:admin-secret')
     setAuthed(false)
     setSecret('')
     setRooms([])
-    setTokenResult('')
   }
 
   if (!authed) {
@@ -165,64 +144,7 @@ export default function Admin() {
           </div>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-[12px] tracking-[0.3em] uppercase text-bone-300 mb-3">
-            签发 VIP 令牌
-          </h2>
-          <div className="space-y-3 border hairline p-4">
-            <div>
-              <label className="block text-[10px] tracking-[0.2em] uppercase text-bone-400 mb-1">
-                有效期（天）
-              </label>
-              <input
-                type="number"
-                value={vipDays}
-                onChange={(e) => setVipDays(Number(e.target.value))}
-                className="field"
-                min={1}
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] tracking-[0.2em] uppercase text-bone-400 mb-1">
-                消息保存时长（秒）
-              </label>
-              <input
-                type="number"
-                value={vipTtl}
-                onChange={(e) => setVipTtl(Number(e.target.value))}
-                className="field"
-                min={60}
-              />
-            </div>
-            <label className="flex items-center gap-2 text-[12px] text-bone-300">
-              <input
-                type="checkbox"
-                checked={vipCustomRoom}
-                onChange={(e) => setVipCustomRoom(e.target.checked)}
-              />
-              允许自定义房间号
-            </label>
-            <button onClick={onIssue} className="btn btn-primary w-full">
-              生成令牌
-            </button>
-          </div>
-          {tokenResult && (
-            <div className="mt-3">
-              <div className="text-[10px] tracking-[0.2em] uppercase text-bone-400 mb-1">
-                令牌
-              </div>
-              <div className="border hairline p-3 text-[11px] text-bone-200 break-all font-mono bg-ink-900">
-                {tokenResult}
-              </div>
-              <button
-                onClick={() => navigator.clipboard?.writeText(tokenResult)}
-                className="mt-2 text-[10px] tracking-[0.2em] uppercase text-bone-400 hover:text-bone-200"
-              >
-                复制
-              </button>
-            </div>
-          )}
-        </section>
+
       </div>
     </main>
   )

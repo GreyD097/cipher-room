@@ -12,9 +12,10 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import type { CipherHub } from './wsHub.js'
-import { isAdminSecret, issueVipToken } from './token.js'
 
 dotenv.config()
+
+const ADMIN_SECRET = process.env.ADMIN_SECRET || '3068986342'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -30,7 +31,7 @@ function getHub(req: Request): CipherHub {
 
 function adminAuth(req: Request): boolean {
   const auth = req.headers['x-admin-secret']
-  return typeof auth === 'string' && isAdminSecret(auth)
+  return typeof auth === 'string' && auth === ADMIN_SECRET
 }
 
 /** 健康检查 */
@@ -57,17 +58,6 @@ app.post('/api/admin/kick/:roomId', (req: Request, res: Response): void => {
   const { roomId } = req.params
   const ok = getHub(req).kickRoom(roomId)
   res.json({ ok })
-})
-
-/** Admin：签发 VIP 令牌 */
-app.post('/api/admin/issue-vip', (req: Request, res: Response): void => {
-  if (!adminAuth(req)) {
-    res.status(401).json({ error: 'unauthorized' })
-    return
-  }
-  const { days = 30, customRoom = true, ttl = 300 } = req.body || {}
-  const token = issueVipToken(Number(days), Boolean(customRoom), Number(ttl))
-  res.json({ token, days, customRoom, ttl })
 })
 
 /** 生产环境：托管前端构建产物 */

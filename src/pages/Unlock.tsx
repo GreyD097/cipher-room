@@ -3,27 +3,25 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { randomRoomId } from '@/lib/cipher'
 import { AVATAR_PRESETS } from '@/lib/store'
 
-function loadProfile(): { nickname: string; avatar: string; token: string } {
+function loadProfile(): { nickname: string; avatar: string } {
   try {
     const nickname = localStorage.getItem('cipher:nick') || ''
     const avatar = localStorage.getItem('cipher:avatar') || AVATAR_PRESETS[0]
-    const token = localStorage.getItem('cipher:vip-token') || ''
-    return { nickname, avatar, token }
+    return { nickname, avatar }
   } catch {
-    return { nickname: '', avatar: AVATAR_PRESETS[0], token: '' }
+    return { nickname: '', avatar: AVATAR_PRESETS[0] }
   }
 }
 
 export default function Unlock() {
   const [pass, setPass] = useState('')
+  const [roomId, setRoomId] = useState('')
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const init = useMemo(loadProfile, [])
   const [nickname, setNickname] = useState(init.nickname)
   const [avatar, setAvatar] = useState(init.avatar)
-  const [token, setToken] = useState(init.token)
-  const [customRoom, setCustomRoom] = useState('')
   const [search] = useSearchParams()
   const navigate = useNavigate()
 
@@ -41,13 +39,14 @@ export default function Unlock() {
     if (fav)
       fav.href =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%230A0A0B"/><text x="50%" y="55%" text-anchor="middle" font-family="monospace" font-size="32" fill="%23EDEDED" dominant-baseline="middle">±</text></svg>'
-  }, [])
+    // URL 带房间号时自动填入
+    if (paramsRoom) setRoomId(paramsRoom)
+  }, [paramsRoom])
 
-  const saveProfile = (nick: string, av: string, tok: string) => {
+  const saveProfile = (nick: string, av: string) => {
     try {
       localStorage.setItem('cipher:nick', nick)
       localStorage.setItem('cipher:avatar', av)
-      localStorage.setItem('cipher:vip-token', tok)
     } catch {
       /* 忽略 */
     }
@@ -60,11 +59,11 @@ export default function Unlock() {
       return
     }
     setBusy(true)
-    const roomId = paramsRoom || customRoom.trim() || randomRoomId()
+    const targetRoom = roomId.trim() || randomRoomId()
     sessionStorage.setItem('cipher:pass', pass)
-    sessionStorage.setItem('cipher:room', roomId)
-    saveProfile(nickname, avatar, token)
-    navigate(`/r/${roomId}`)
+    sessionStorage.setItem('cipher:room', targetRoom)
+    saveProfile(nickname, avatar)
+    navigate(`/r/${targetRoom}`)
   }
 
   return (
@@ -86,6 +85,20 @@ export default function Unlock() {
         </ul>
 
         <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
+          房间号
+        </label>
+        <input
+          type="text"
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value.slice(0, 128))}
+          onKeyDown={(e) => e.key === 'Enter' && onEnter()}
+          placeholder="留空则随机生成"
+          className="field"
+          autoComplete="off"
+          spellCheck={false}
+        />
+
+        <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2 mt-4">
           双方口令
         </label>
         <div className="relative">
@@ -181,53 +194,12 @@ export default function Unlock() {
                 ))}
               </div>
             </div>
-
-            <div>
-              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
-                VIP 令牌
-              </label>
-              <input
-                type="text"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="粘贴令牌，获得高级权限"
-                className="field"
-                autoComplete="off"
-                spellCheck={false}
-              />
-              <p className="mt-1 text-[10px] text-bone-500">
-                留空即使用免费模式
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
-                房间号
-              </label>
-              <input
-                type="text"
-                value={customRoom}
-                onChange={(e) => setCustomRoom(e.target.value.slice(0, 128))}
-                placeholder="输入自定义房间号，留空则随机生成"
-                className="field"
-                autoComplete="off"
-                spellCheck={false}
-              />
-              <p className="mt-1 text-[10px] text-bone-500">
-                VIP 令牌用户可自定义任意房间号
-              </p>
-            </div>
           </div>
         )}
 
         <div className="mt-6 text-[10px] text-bone-400 leading-relaxed">
           <p className="mb-1">
             <span className="text-bone-300">提示</span> · 选择强口令；不在公共设备使用；不要通过明文信道分享。
-          </p>
-          <p className="opacity-60">
-            {paramsRoom
-              ? `将进入房间 ${paramsRoom}`
-              : '未指定房间：进入后将获得一个新房间代号'}
           </p>
         </div>
 

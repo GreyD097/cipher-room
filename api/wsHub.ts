@@ -67,17 +67,21 @@ export class CipherHub {
         ws.close(4002, 'too big')
         return
       }
-      if (tokens <= 0) {
-        this.send(ws, { t: 'error', reason: 'rate' })
-        return
-      }
-      tokens--
       let msg: unknown
       try {
         msg = JSON.parse(raw.toString())
       } catch {
         ws.close(4003, 'bad json')
         return
+      }
+      // 仅对 pub（聊天消息）限流，typing/read 等控制消息不计入
+      const m = msg as { t?: string }
+      if (m.t === 'pub') {
+        if (tokens <= 0) {
+          this.send(ws, { t: 'error', reason: 'rate' })
+          return
+        }
+        tokens--
       }
       this.handleMessage(ws, entry, msg)
     })

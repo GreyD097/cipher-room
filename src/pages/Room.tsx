@@ -6,7 +6,7 @@ import { makeId } from '@/lib/cipher'
 export default function Room() {
   const { roomId = '' } = useParams()
   const navigate = useNavigate()
-  const { conn, peerOnline, items, peerTyping, error, connect, send, destroy, typing, tick } =
+  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, destroy, typing, tick } =
     useChat()
 
   const [draft, setDraft] = useState('')
@@ -96,7 +96,11 @@ export default function Room() {
         <Banner type="warn">对方口令与你不同，无法解密消息</Banner>
       )}
       {error === 'full' && <Banner type="warn">房间已满（2 人上限）</Banner>}
-      {error === 'rate' && <Banner type="warn">消息发送太快，请稍候</Banner>}
+      {error === 'rate' && (
+        <Banner type="warn">
+          消息发送太快，请稍候{rateLeft !== null ? ` (${rateLeft}s)` : ''}
+        </Banner>
+      )}
 
       <div
         ref={listRef}

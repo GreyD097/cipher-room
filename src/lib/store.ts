@@ -43,6 +43,8 @@ interface ChatState {
   items: ChatItem[]
   peerTyping: boolean
   error: string | null
+  /** rate 限流倒计时秒数；null 表示未限流 */
+  rateLeft: number | null
   connect: (roomId: string, passphrase: string) => Promise<void>
   send: (text: string, sid: string) => Promise<void>
   destroy: () => void
@@ -64,6 +66,7 @@ export const useChat = create<ChatState>((set, get) => ({
   items: [],
   peerTyping: false,
   error: null,
+  rateLeft: null,
 
   connect: async (roomId, passphrase) => {
     set({ conn: 'connecting', error: null, items: [], peerOnline: false })
@@ -106,10 +109,8 @@ export const useChat = create<ChatState>((set, get) => ({
         } else if (msg.t === 'error') {
           // rate 限流只提示，不断开连接
           if (msg.reason === 'rate') {
-            set({ error: 'rate' })
-            window.setTimeout(() => {
-              if (get().error === 'rate') set({ error: null })
-            }, 3000)
+            // 后端令牌桶每秒刷新一次，倒计时 2 秒留出缓冲
+            set({ error: 'rate', rateLeft: 2 })
           } else {
             set({ error: msg.reason, conn: 'error' })
           }
@@ -201,7 +202,19 @@ export const useChat = create<ChatState>((set, get) => ({
         if (left !== it.left) changed = true
         return { ...it, left }
       })
-      return changed ? { items } : {}
+      // rate 限流倒计时：每秒递减，归零后清除提示
+      let rateLeft = s.rateLeft
+      let error = s.error
+      if (rateLeft !== null) {
+        if (rateLeft <= 1) {
+          rateLeft = null
+          if (error === 'rate') error = null
+        } else {
+          rateLeft = rateLeft - 1
+        }
+        changed = true
+      }
+      return changed ? { items, rateLeft, error } : {}
     })
   },
 
@@ -228,6 +241,7 @@ export const useChat = create<ChatState>((set, get) => ({
       items: [],
       peerTyping: false,
       error: null,
+      rateLeft: null,
     })
   },
 }))

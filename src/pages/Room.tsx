@@ -6,10 +6,11 @@ import { makeId } from '@/lib/cipher'
 export default function Room() {
   const { roomId = '' } = useParams()
   const navigate = useNavigate()
-  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, destroy, typing, tick } =
+  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, destroy, wipe, typing, tick } =
     useChat()
 
   const [draft, setDraft] = useState('')
+  const [blurred, setBlurred] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const typingTimer = useRef<number | null>(null)
@@ -52,6 +53,43 @@ export default function Room() {
     const id = window.setInterval(tick, 1000)
     return () => window.clearInterval(id)
   }, [tick])
+
+  // 截屏软防护：PrintScreen 清空 / 失焦模糊 / 禁用右键与开发者工具快捷键 / 禁止拖选
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // 拦截 F12 与常见开发者工具快捷键
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key))
+      ) {
+        e.preventDefault()
+      }
+      // PrintScreen：立即清空本地消息
+      if (e.key === 'PrintScreen') {
+        wipe()
+      }
+    }
+    const onContextMenu = (e: MouseEvent) => e.preventDefault()
+    const onDragStart = (e: DragEvent) => e.preventDefault()
+    const onBlur = () => setBlurred(true)
+    const onFocus = () => setBlurred(false)
+    const onVisibility = () => setBlurred(document.hidden)
+
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('contextmenu', onContextMenu)
+    document.addEventListener('dragstart', onDragStart)
+    window.addEventListener('blur', onBlur)
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('contextmenu', onContextMenu)
+      document.removeEventListener('dragstart', onDragStart)
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [wipe])
 
   // 过滤已过期的消息
   const visible = items.filter((i) => i.left > 0)
@@ -104,7 +142,10 @@ export default function Room() {
 
       <div
         ref={listRef}
-        className="flex-1 overflow-y-auto px-4 py-3 mx-auto w-full max-w-[640px]"
+        className={[
+          'flex-1 overflow-y-auto px-4 py-3 mx-auto w-full max-w-[640px] transition-[filter] duration-150',
+          blurred ? 'blur-xl select-none' : '',
+        ].join(' ')}
       >
         {visible.length === 0 && (
           <div className="text-center text-[11px] text-bone-400 mt-12 leading-relaxed">
@@ -215,7 +256,7 @@ function Bubble({ item, myId }: { item: ChatItem; myId: string }) {
     <div className={`my-1.5 flex ${isMine ? 'justify-end' : 'justify-start'}`}>
       <div
         className={[
-          'max-w-[78%] break-words whitespace-pre-wrap px-3 py-2 text-[14px] leading-relaxed',
+          'max-w-[78%] break-words whitespace-pre-wrap px-3 py-2 text-[14px] leading-relaxed select-none',
           'border',
           isMine
             ? 'border-bone-300 text-bone-100 bg-ink-900'

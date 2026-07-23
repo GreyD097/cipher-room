@@ -47,6 +47,7 @@ interface ChatState {
   rateLeft: number | null
   connect: (roomId: string, passphrase: string) => Promise<void>
   send: (text: string, sid: string) => Promise<void>
+  wipe: () => void
   destroy: () => void
   tick: () => void
   typing: (on: boolean) => void
@@ -216,6 +217,10 @@ export const useChat = create<ChatState>((set, get) => ({
       }
       return changed ? { items, rateLeft, error } : {}
     })
+  },
+
+  wipe: () => {
+    set({ items: [] })
   },
 
   destroy: () => {

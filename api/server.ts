@@ -10,10 +10,11 @@ import { PublicHub } from './publicHub.js'
 const PORT = process.env.PORT || 3001
 
 const server = createServer(app)
-const wss = new WebSocketServer({ noServer: true })
+const wssCipher = new WebSocketServer({ noServer: true })
+const wssPublic = new WebSocketServer({ noServer: true })
 
-const hub = new CipherHub({ wss, log: (m) => console.log('[hub]', m) })
-const publicHub = new PublicHub({ wss, log: (m) => console.log('[pub]', m) })
+const hub = new CipherHub({ wss: wssCipher, log: (m) => console.log('[hub]', m) })
+const publicHub = new PublicHub({ wss: wssPublic, log: (m) => console.log('[pub]', m) })
 
 app.set('hub', hub)
 app.set('publicHub', publicHub)
@@ -23,9 +24,13 @@ server.on('upgrade', (req, socket, head) => {
     socket.destroy()
     return
   }
-  if (req.url.startsWith('/ws/r/') || req.url.startsWith('/ws/p/')) {
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      wss.emit('connection', ws, req)
+  if (req.url.startsWith('/ws/r/')) {
+    wssCipher.handleUpgrade(req, socket, head, (ws) => {
+      wssCipher.emit('connection', ws, req)
+    })
+  } else if (req.url.startsWith('/ws/p/')) {
+    wssPublic.handleUpgrade(req, socket, head, (ws) => {
+      wssPublic.emit('connection', ws, req)
     })
   } else {
     socket.destroy()
@@ -43,7 +48,8 @@ server.listen(PORT, () => {
 const shutdown = (signal: string) => {
   // eslint-disable-next-line no-console
   console.log(`${signal} signal received`)
-  wss.close()
+  wssCipher.close()
+  wssPublic.close()
   server.close(() => {
     // eslint-disable-next-line no-console
     console.log('Server closed')

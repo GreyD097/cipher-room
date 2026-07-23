@@ -122,14 +122,6 @@ export class PublicHub {
       entry.sockets.delete(ws)
       this.log(`public leave room=${roomId} peers=${entry.sockets.size}`)
       this.broadcast(entry, null, { t: 'leave', nickname, peers: entry.sockets.size })
-      if (entry.sockets.size === 0) {
-        setTimeout(() => {
-          if (entry.sockets.size === 0) {
-            this.rooms.delete(roomId)
-            this.log(`public room=${roomId} cleaned up`)
-          }
-        }, 30 * 60 * 1000)
-      }
     }
     ws.on('close', cleanup)
     ws.on('error', cleanup)

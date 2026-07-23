@@ -34,6 +34,7 @@ export default function Room() {
     document.title = `密室 · ${roomId}`
     const pass = sessionStorage.getItem('cipher:pass')
     const storedRoom = sessionStorage.getItem('cipher:room')
+    const token = localStorage.getItem('cipher:vip-token') || ''
     if (!pass) {
       navigate('/')
       return
@@ -41,7 +42,7 @@ export default function Room() {
     if (storedRoom !== roomId) {
       sessionStorage.setItem('cipher:room', roomId)
     }
-    connect(roomId, pass)
+    connect(roomId, pass, token)
     return () => {
       destroy()
       if (typingTimer.current) window.clearTimeout(typingTimer.current)
@@ -252,29 +253,56 @@ function Banner({ type, children }: { type: 'warn' | 'info'; children: React.Rea
 
 function Bubble({ item, myId }: { item: ChatItem; myId: string }) {
   const isMine = item.sid === myId
+  const avatarColor = item.avatar || '#60a5fa'
+  const showAvatar = !isMine
   return (
-    <div className={`my-1.5 flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={[
-          'max-w-[78%] break-words whitespace-pre-wrap px-3 py-2 text-[14px] leading-relaxed select-none',
-          'border',
-          isMine
-            ? 'border-bone-300 text-bone-100 bg-ink-900'
-            : 'border-ink-600 text-bone-200 bg-ink-900',
-        ].join(' ')}
-      >
-        <div>{item.text}</div>
+    <div className={`my-1.5 flex ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
+      {showAvatar && (
+        <div
+          className="w-7 h-7 rounded-full shrink-0 mt-1 flex items-center justify-center text-[11px] text-white font-medium"
+          style={{ backgroundColor: avatarColor }}
+          aria-hidden
+        >
+          {item.nickname ? item.nickname.slice(0, 1).toUpperCase() : '·'}
+        </div>
+      )}
+      <div className="max-w-[78%]">
+        {showAvatar && item.nickname && (
+          <div className="text-[10px] text-bone-400 mb-0.5 ml-1 tracking-wider">
+            {item.nickname}
+          </div>
+        )}
         <div
           className={[
-            'mt-1 text-[9px] tracking-[0.2em] uppercase text-bone-400 flex gap-2 tabular',
-            isMine ? 'justify-end' : 'justify-start',
+            'break-words whitespace-pre-wrap px-3 py-2 text-[14px] leading-relaxed select-none',
+            'border',
+            isMine
+              ? 'border-bone-300 text-bone-100 bg-ink-900'
+              : 'border-ink-600 text-bone-200 bg-ink-900',
           ].join(' ')}
         >
-          <span>{formatTime(item.ts)}</span>
-          {isMine && <span>· {item.acked === 'read' ? '已读' : '已送达'}</span>}
-          <span>· -{item.left}s</span>
+          <div>{item.text}</div>
+          <div
+            className={[
+              'mt-1 text-[9px] tracking-[0.2em] uppercase text-bone-400 flex gap-2 tabular',
+              isMine ? 'justify-end' : 'justify-start',
+            ].join(' ')}
+          >
+            <span>{formatTime(item.ts)}</span>
+            {isMine && <span>· {item.acked === 'read' ? '已读' : '已送达'}</span>}
+            <span>· -{item.left}s</span>
+          </div>
         </div>
       </div>
+      {isMine && (
+        <div
+          className="w-7 h-7 rounded-full shrink-0 mt-1 flex items-center justify-center text-[11px] text-white font-medium"
+          style={{ backgroundColor: avatarColor }}
+          aria-hidden
+        >
+          {item.nickname ? item.nickname.slice(0, 1).toUpperCase() : '·'}
+        </div>
+      )}
     </div>
   )
 }

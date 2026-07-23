@@ -10,7 +10,10 @@ const PORT = process.env.PORT || 3001
 
 const server = createServer(app)
 const wss = new WebSocketServer({ noServer: true })
-new CipherHub({ wss, log: (m) => console.log('[hub]', m) })
+const hub = new CipherHub({ wss, log: (m) => console.log('[hub]', m) })
+
+// 将 hub 挂载到 app 供路由使用
+app.set('hub', hub)
 
 server.on('upgrade', (req, socket, head) => {
   if (!req.url) {

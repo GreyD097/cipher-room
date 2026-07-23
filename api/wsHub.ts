@@ -3,6 +3,7 @@
  * 仅转发密文、维护在线状态，不解析任何业务负载
  */
 import type { WebSocket, WebSocketServer } from 'ws'
+import { verifyToken, type VipPayload } from './token.js'
 
 interface RoomEntry {
   sockets: Set<WebSocket>
@@ -14,6 +15,10 @@ const MAX_PEERS = 2
 const RATE_LIMIT = 30
 /** 单条消息体积上限（base64 编码后） */
 const MAX_PAYLOAD = 64 * 1024
+/** 默认消息存活秒数 */
+const DEFAULT_TTL = 60
+/** VIP 房间号最大长度（普通 64） */
+const VIP_ROOM_MAX_LEN = 128
 
 export interface HubOptions {
   wss: WebSocketServer
@@ -33,15 +38,30 @@ export class CipherHub {
 
   private handleConnection(ws: WebSocket, url: string) {
     this.log(`connect ${url}`)
-    // 解析房间号：/ws/r/:roomId
-    const m = url.match(/^\/ws\/r\/([A-Za-z0-9_-]{1,64})/)
+    // 解析房间号和查询参数：/ws/r/:roomId?token=xxx
+    const m = url.match(/^\/ws\/r\/([^?]+)(\?.*)?$/)
     if (!m) {
       this.log(`bad room url=${url}`)
       this.send(ws, { t: 'error', reason: 'banned' })
       ws.close(4000, 'bad room')
       return
     }
-    const roomId = m[1]
+    const rawRoomId = decodeURIComponent(m[1])
+    const queryString = m[2] || ''
+    const tokenMatch = queryString.match(/[?&]token=([^&]+)/)
+    const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : ''
+
+    // 验证 VIP 令牌
+    const vip = token ? verifyToken(token) : null
+
+    // 房间号长度限制：普通 1-64，VIP 最多 128
+    const maxLen = vip ? VIP_ROOM_MAX_LEN : 64
+    const roomId = rawRoomId.slice(0, maxLen)
+    if (!roomId || roomId.length < 1) {
+      this.send(ws, { t: 'error', reason: 'banned' })
+      ws.close(4000, 'bad room')
+      return
+    }
     this.log(`join room=${roomId}`)
     const entry = this.rooms.get(roomId) ?? { sockets: new Set<WebSocket>() }
     if (entry.sockets.size >= MAX_PEERS) {
@@ -59,7 +79,7 @@ export class CipherHub {
       tokens = RATE_LIMIT
     }, 1000).unref?.()
 
-    this.send(ws, { t: 'welcome', peers: entry.sockets.size - 1, ttl: 60 })
+    this.send(ws, { t: 'welcome', peers: entry.sockets.size - 1, ttl: DEFAULT_TTL, vip: vip ? { level: vip.level, customRoom: !!vip.customRoom, ttl: vip.ttl } : null })
     this.broadcast(entry, ws, { t: 'peer', online: true })
 
     ws.on('message', (raw) => {
@@ -132,5 +152,28 @@ export class CipherHub {
         /* 忽略 */
       }
     }
+  }
+
+  /** Admin：列出所有活跃房间（仅元数据，不含消息内容） */
+  listRooms(): { roomId: string; peers: number }[] {
+    const result: { roomId: string; peers: number }[] = []
+    for (const [roomId, entry] of this.rooms) {
+      result.push({ roomId, peers: entry.sockets.size })
+    }
+    return result
+  }
+
+  /** Admin：踢掉指定房间的所有连接 */
+  kickRoom(roomId: string): boolean {
+    const entry = this.rooms.get(roomId)
+    if (!entry) return false
+    for (const sock of entry.sockets) {
+      try {
+        sock.close(4030, 'kicked')
+      } catch {
+        /* 忽略 */
+      }
+    }
+    return true
   }
 }

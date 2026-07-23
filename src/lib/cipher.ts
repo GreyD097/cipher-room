@@ -90,6 +90,8 @@ export interface EnvMsg {
   ct: string
   ttl: number
   ts: number
+  nickname?: string
+  avatar?: string
 }
 
 export interface EnvTyping {
@@ -109,6 +111,8 @@ export async function encryptText(
   text: string,
   sid: string,
   ttl = 60,
+  nickname?: string,
+  avatar?: string,
 ): Promise<EnvMsg> {
   const iv = new Uint8Array(IV_LEN)
   crypto.getRandomValues(iv)
@@ -122,6 +126,8 @@ export async function encryptText(
     ct: toB64(ct),
     ttl,
     ts: Date.now(),
+    nickname,
+    avatar,
   }
 }
 

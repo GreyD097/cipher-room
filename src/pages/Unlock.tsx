@@ -1,11 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { randomRoomId } from '@/lib/cipher'
+import { AVATAR_PRESETS } from '@/lib/store'
+
+function loadProfile(): { nickname: string; avatar: string; token: string } {
+  try {
+    const nickname = localStorage.getItem('cipher:nick') || ''
+    const avatar = localStorage.getItem('cipher:avatar') || AVATAR_PRESETS[0]
+    const token = localStorage.getItem('cipher:vip-token') || ''
+    return { nickname, avatar, token }
+  } catch {
+    return { nickname: '', avatar: AVATAR_PRESETS[0], token: '' }
+  }
+}
 
 export default function Unlock() {
   const [pass, setPass] = useState('')
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const init = useMemo(loadProfile, [])
+  const [nickname, setNickname] = useState(init.nickname)
+  const [avatar, setAvatar] = useState(init.avatar)
+  const [token, setToken] = useState(init.token)
   const [search] = useSearchParams()
   const navigate = useNavigate()
 
@@ -25,6 +42,16 @@ export default function Unlock() {
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%230A0A0B"/><text x="50%" y="55%" text-anchor="middle" font-family="monospace" font-size="32" fill="%23EDEDED" dominant-baseline="middle">±</text></svg>'
   }, [])
 
+  const saveProfile = (nick: string, av: string, tok: string) => {
+    try {
+      localStorage.setItem('cipher:nick', nick)
+      localStorage.setItem('cipher:avatar', av)
+      localStorage.setItem('cipher:vip-token', tok)
+    } catch {
+      /* 忽略 */
+    }
+  }
+
   const onEnter = async () => {
     if (busy || locked) return
     if (pass.length < 6) {
@@ -35,6 +62,7 @@ export default function Unlock() {
     const roomId = paramsRoom || randomRoomId()
     sessionStorage.setItem('cipher:pass', pass)
     sessionStorage.setItem('cipher:room', roomId)
+    saveProfile(nickname, avatar, token)
     navigate(`/r/${roomId}`)
   }
 
@@ -105,6 +133,73 @@ export default function Unlock() {
         >
           {busy ? '加载中…' : '进入  →'}
         </button>
+
+        <button
+          onClick={() => setShowSettings((s) => !s)}
+          className="mt-3 w-full text-[10px] tracking-[0.3em] uppercase text-bone-500 hover:text-bone-300 py-2"
+        >
+          {showSettings ? '收起设置' : '更多设置'}
+        </button>
+
+        {showSettings && (
+          <div className="mt-4 space-y-4 border-t hairline pt-4">
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
+                昵称
+              </label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value.slice(0, 16))}
+                placeholder="可不填，仅对方可见"
+                className="field"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
+                头像颜色
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {AVATAR_PRESETS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setAvatar(c)}
+                    className={[
+                      'w-7 h-7 rounded-full transition-all',
+                      avatar === c
+                        ? 'ring-2 ring-bone-100 ring-offset-2 ring-offset-ink-950 scale-110'
+                        : 'opacity-70 hover:opacity-100',
+                    ].join(' ')}
+                    style={{ backgroundColor: c }}
+                    aria-label={`选择头像颜色 ${c}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] tracking-[0.3em] uppercase text-bone-400 mb-2">
+                VIP 令牌
+              </label>
+              <input
+                type="text"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="粘贴令牌，获得高级权限"
+                className="field"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <p className="mt-1 text-[10px] text-bone-500">
+                留空即使用免费模式
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 text-[10px] text-bone-400 leading-relaxed">
           <p className="mb-1">

@@ -11,6 +11,8 @@ import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
+import type { CipherHub } from './wsHub.js'
+import { isAdminSecret, issueVipToken } from './token.js'
 
 dotenv.config()
 
@@ -22,9 +24,50 @@ const app: express.Application = express()
 app.use(cors())
 app.use(express.json({ limit: '64kb' }))
 
+function getHub(req: Request): CipherHub {
+  return req.app.get('hub') as CipherHub
+}
+
+function adminAuth(req: Request): boolean {
+  const auth = req.headers['x-admin-secret']
+  return typeof auth === 'string' && isAdminSecret(auth)
+}
+
 /** 健康检查 */
 app.get('/api/health', (_req: Request, res: Response): void => {
   res.status(200).json({ ok: true })
+})
+
+/** Admin：房间列表 */
+app.get('/api/admin/rooms', (req: Request, res: Response): void => {
+  if (!adminAuth(req)) {
+    res.status(401).json({ error: 'unauthorized' })
+    return
+  }
+  const rooms = getHub(req).listRooms()
+  res.json({ rooms })
+})
+
+/** Admin：踢掉指定房间 */
+app.post('/api/admin/kick/:roomId', (req: Request, res: Response): void => {
+  if (!adminAuth(req)) {
+    res.status(401).json({ error: 'unauthorized' })
+    return
+  }
+  const { roomId } = req.params
+  const ok = getHub(req).kickRoom(roomId)
+  res.json({ ok })
+})
+
+/** Admin：签发 VIP 令牌 */
+app.post('/api/admin/issue-vip', (req: Request, res: Response): void => {
+  if (!adminAuth(req)) {
+    res.status(401).json({ error: 'unauthorized' })
+    return
+  }
+  const { days = 30, customRoom = true, ttl = 300 } = req.body || {}
+  const token = issueVipToken(Number(days), Boolean(customRoom), Number(ttl))
+  res.json({ token, days, customRoom, ttl })
 })
 
 /** 生产环境：托管前端构建产物 */

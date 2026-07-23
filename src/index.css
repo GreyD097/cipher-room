@@ -70,12 +70,12 @@
     @apply inline-flex items-center justify-center
            px-3 py-2 text-xs uppercase tracking-[0.2em] text-bone-200
            border border-ink-600 hover:border-bone-300 hover:text-bone-100
-           active:translate-y-px transition-colors select-none;
+           focus:outline-none active:translate-y-px transition-colors select-none;
     min-height: 44px;
   }
 
   .btn-primary {
-    @apply text-bone-100 border-bone-300;
+    @apply text-bone-100 border-ink-500 hover:border-bone-300;
   }
 
   .btn-danger {

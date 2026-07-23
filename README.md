@@ -2,10 +2,11 @@
 
 > 一个端对端加密的私密聊天工具。消息在离开你的屏幕之前就已经加密，服务器只负责转发乱码，连标点符号都看不懂。
 
-[![最新版本](https://img.shields.io/github/v/release/GreyD097/cipher-room?label=最新版本)](https://github.com/GreyD097/cipher-room/releases)
-[![收藏](https://img.shields.io/github/stars/GreyD097/cipher-room?label=收藏)](https://github.com/GreyD097/cipher-room/stargazers)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Release](https://img.shields.io/github/v/release/GreyD097/cipher-room?style=for-the-badge)](https://github.com/GreyD097/cipher-room/releases)
+[![Stars](https://img.shields.io/github/stars/GreyD097/cipher-room?style=for-the-badge)](https://github.com/GreyD097/cipher-room/stargazers)
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://github.com/GreyD097/cipher-room/blob/master/LICENSE)
 
 ---
 

@@ -15,9 +15,15 @@ export default function Room() {
   const typingTimer = useRef<number | null>(null)
   // 每个标签页独立的身份标识，避免同一浏览器多标签共享 store 导致方向混乱
   const myId = useRef<string>(makeId())
+  // typing 节流：1 秒内最多发一次，避免快速打字耗尽限流令牌
+  const lastTypingSent = useRef(0)
   const onType = (v: string) => {
     setDraft(v)
-    typing(true)
+    const now = Date.now()
+    if (now - lastTypingSent.current > 1000) {
+      lastTypingSent.current = now
+      typing(true)
+    }
     if (typingTimer.current) window.clearTimeout(typingTimer.current)
     typingTimer.current = window.setTimeout(() => typing(false), 1200)
   }
@@ -90,7 +96,7 @@ export default function Room() {
         <Banner type="warn">对方口令与你不同，无法解密消息</Banner>
       )}
       {error === 'full' && <Banner type="warn">房间已满（2 人上限）</Banner>}
-      {error === 'rate' && <Banner type="warn">消息频率过高</Banner>}
+      {error === 'rate' && <Banner type="warn">消息发送太快，请稍候</Banner>}
 
       <div
         ref={listRef}

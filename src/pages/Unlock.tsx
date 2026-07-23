@@ -45,7 +45,7 @@ export default function Unlock() {
           密室 / cipher room
         </div>
         <h1 className="text-2xl text-bone-100 tracking-tightest mb-1">
-          two<em className="not-italic text-signal-green">.</em>one
+          cipher<em className="not-italic text-signal-green">.</em>room
         </h1>
         <p className="text-xs text-bone-400 mb-8 leading-relaxed">
           输入双方约定的口令进入密室。消息在你的设备上加密，到期自动消失，服务器只转发密文。

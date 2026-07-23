@@ -104,7 +104,15 @@ export const useChat = create<ChatState>((set, get) => ({
           const env = envFromB64(msg.payloadB64) as Envelope
           await get()._onEnvelope(env)
         } else if (msg.t === 'error') {
-          set({ error: msg.reason, conn: 'error' })
+          // rate 限流只提示，不断开连接
+          if (msg.reason === 'rate') {
+            set({ error: 'rate' })
+            window.setTimeout(() => {
+              if (get().error === 'rate') set({ error: null })
+            }, 3000)
+          } else {
+            set({ error: msg.reason, conn: 'error' })
+          }
         }
       } catch {
         /* 忽略 */

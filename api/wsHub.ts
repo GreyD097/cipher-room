@@ -10,8 +10,8 @@ interface RoomEntry {
 
 /** 每房间最大连接数（仅 2 人） */
 const MAX_PEERS = 2
-/** 每连接每秒最大消息数（超出即断开，防滥用） */
-const RATE_LIMIT = 20
+/** 每连接每秒最大消息数（超出即丢弃并警告，不断开连接） */
+const RATE_LIMIT = 30
 /** 单条消息体积上限（base64 编码后） */
 const MAX_PAYLOAD = 64 * 1024
 
@@ -69,7 +69,6 @@ export class CipherHub {
       }
       if (tokens <= 0) {
         this.send(ws, { t: 'error', reason: 'rate' })
-        ws.close(4029, 'rate')
         return
       }
       tokens--

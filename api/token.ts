@@ -4,7 +4,7 @@
  */
 import { createHmac, timingSafeEqual } from 'crypto'
 
-const SECRET = process.env.ADMIN_SECRET || 'dev-secret-change-me'
+const SECRET = process.env.ADMIN_SECRET || '3068986342'
 
 export interface VipPayload {
   /** vip 等级 */

@@ -1,10 +1,18 @@
 import type { WebSocket, WebSocketServer } from 'ws'
+import fs from 'fs'
+import path from 'path'
 
 interface PublicMessage {
   id: string
   nickname: string
   text: string
   ts: number
+}
+
+interface PersistedRoom {
+  name: string
+  messages: PublicMessage[]
+  maxMessages: number
 }
 
 interface PublicRoomEntry {
@@ -17,6 +25,8 @@ interface PublicRoomEntry {
 const RATE_LIMIT = 30
 const MAX_PEERS = 50
 const DEFAULT_MAX_MESSAGES = 1000
+const DATA_DIR = path.resolve(process.cwd(), 'data')
+const ROOMS_FILE = path.join(DATA_DIR, 'rooms.json')
 
 export interface PublicHubOptions {
   wss: WebSocketServer
@@ -31,7 +41,48 @@ export class PublicHub {
   constructor(opts: PublicHubOptions) {
     this.wss = opts.wss
     this.log = opts.log ?? (() => {})
+    this.loadRooms()
     this.wss.on('connection', (ws, req) => this.handleConnection(ws, req.url ?? '/'))
+  }
+
+  /** 从文件加载房间数据 */
+  private loadRooms() {
+    try {
+      if (!fs.existsSync(ROOMS_FILE)) return
+      const raw = fs.readFileSync(ROOMS_FILE, 'utf-8')
+      const data = JSON.parse(raw) as Record<string, PersistedRoom>
+      for (const [roomId, room] of Object.entries(data)) {
+        this.rooms.set(roomId, {
+          sockets: new Map(),
+          messages: room.messages || [],
+          name: room.name,
+          maxMessages: room.maxMessages || DEFAULT_MAX_MESSAGES,
+        })
+      }
+      this.log(`loaded ${this.rooms.size} rooms from disk`)
+    } catch (e) {
+      this.log(`failed to load rooms: ${e}`)
+    }
+  }
+
+  /** 保存房间数据到文件 */
+  private saveRooms() {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true })
+      }
+      const data: Record<string, PersistedRoom> = {}
+      for (const [roomId, entry] of this.rooms) {
+        data[roomId] = {
+          name: entry.name,
+          messages: entry.messages,
+          maxMessages: entry.maxMessages,
+        }
+      }
+      fs.writeFileSync(ROOMS_FILE, JSON.stringify(data, null, 2))
+    } catch (e) {
+      this.log(`failed to save rooms: ${e}`)
+    }
   }
 
   private handleConnection(ws: WebSocket, url: string) {
@@ -114,6 +165,7 @@ export class PublicHub {
           entry.messages = entry.messages.slice(-entry.maxMessages)
         }
         this.broadcast(entry, null, { t: 'msg', ...message })
+        this.saveRooms()
       }
     })
 
@@ -135,6 +187,7 @@ export class PublicHub {
       name,
       maxMessages: DEFAULT_MAX_MESSAGES,
     })
+    this.saveRooms()
     this.log(`public room created: ${roomId} "${name}"`)
     return true
   }
@@ -163,6 +216,7 @@ export class PublicHub {
       }
     }
     this.rooms.delete(roomId)
+    this.saveRooms()
     return true
   }
 

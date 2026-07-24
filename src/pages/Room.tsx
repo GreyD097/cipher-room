@@ -6,7 +6,7 @@ import { makeId } from '@/lib/cipher'
 export default function Room() {
   const { roomId = '' } = useParams()
   const navigate = useNavigate()
-  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, destroy, wipe, typing, tick } =
+  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, sendImage, destroy, wipe, typing, tick, ttl } =
     useChat()
 
   const [draft, setDraft] = useState('')
@@ -34,6 +34,8 @@ export default function Room() {
     document.title = `密室 · ${roomId}`
     const pass = sessionStorage.getItem('cipher:pass')
     const storedRoom = sessionStorage.getItem('cipher:room')
+    const storedTtl = sessionStorage.getItem('cipher:ttl')
+    const ttl = storedTtl ? parseInt(storedTtl, 10) : 60
     if (!pass) {
       navigate('/')
       return
@@ -41,7 +43,7 @@ export default function Room() {
     if (storedRoom !== roomId) {
       sessionStorage.setItem('cipher:room', roomId)
     }
-    connect(roomId, pass)
+    connect(roomId, pass, ttl)
     return () => {
       destroy()
       if (typingTimer.current) window.clearTimeout(typingTimer.current)
@@ -157,7 +159,7 @@ export default function Room() {
         {visible.length === 0 && (
           <div className="text-center text-[11px] text-bone-400 mt-12 leading-relaxed">
             <p className="mb-1 tracking-[0.3em] uppercase">— 暂无消息 —</p>
-          <p>60 秒后消息会自动消失</p>
+          <p>{ttl} 秒后消息会自动消失</p>
           </div>
         )}
         {visible.map((it) => (
@@ -172,6 +174,7 @@ export default function Room() {
         onChange={onType}
         onKeyDown={onKeyDown}
         onSend={onSend}
+        onSendImage={(dataUrl) => sendImage(dataUrl, myId.current)}
         disabled={!peerOnline}
       />
     </main>
@@ -279,6 +282,11 @@ function Bubble({ item, myId }: { item: ChatItem; myId: string }) {
             : 'border-ink-600 text-bone-200 bg-ink-900',
         ].join(' ')}
       >
+        {item.image && (
+          <div className="mb-2">
+            <img src={item.image} alt="" className="max-w-full rounded" />
+          </div>
+        )}
         <div>{item.text}</div>
         <div
           className={[
@@ -318,15 +326,17 @@ interface ComposerProps {
   onChange: (v: string) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSend: () => void
+  onSendImage: (dataUrl: string) => void
   disabled?: boolean
 }
 
 const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Composer(
-  { value, onChange, onKeyDown, onSend, disabled },
+  { value, onChange, onKeyDown, onSend, onSendImage, disabled },
   ref,
 ) {
-  // 输入框自适应高度
   const taRef = useRef<HTMLTextAreaElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   useLayoutEffect(() => {
     const el = taRef.current
     if (!el) return
@@ -334,9 +344,41 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
     el.style.height = Math.min(128, el.scrollHeight) + 'px'
   }, [value])
 
+  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string
+      if (dataUrl) {
+        onSendImage(dataUrl)
+      }
+    }
+    reader.readAsDataURL(file)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <div className="border-t hairline mx-auto w-full max-w-[640px] bg-ink-950">
       <div className="flex items-end gap-2 px-3 py-2">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled}
+          className="btn border-ink-600 hover:border-bone-300 text-bone-400 hover:text-bone-200 w-10 h-10 p-0"
+          title="发送图片"
+        >
+          <span className="text-sm">📷</span>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={onFileSelect}
+          className="hidden"
+        />
         <textarea
           ref={(node) => {
             taRef.current = node

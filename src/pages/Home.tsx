@@ -71,19 +71,27 @@ export default function Home() {
         </p>
 
         <div className="space-y-3">
-          <button
-            onClick={() => navigate('/unlock')}
-            className="btn btn-primary w-full text-left px-4 py-4 flex items-center gap-3"
-          >
-            <div className="w-8 h-8 rounded-full bg-signal-green/10 flex items-center justify-center">
-              <span className="text-signal-green text-sm">◎</span>
-            </div>
-            <div className="flex-1">
-              <div className="text-[13px] text-bone-100">密室</div>
-              <div className="text-[10px] text-bone-400 mt-0.5">端对端加密 · 2人上限 · 消息自动消失</div>
-            </div>
-            <span className="text-bone-500 text-sm">→</span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate('/unlock')}
+              className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-signal-green/10 flex items-center justify-center">
+                <span className="text-signal-green text-sm">◎</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] text-bone-100">密室</div>
+                <div className="text-[10px] text-bone-400 mt-0.5 truncate">端对端加密 · 2人上限 · 消息自动消失</div>
+              </div>
+            </button>
+            <button
+              onClick={() => navigate('/quick')}
+              className="btn btn-primary w-16 h-16 flex items-center justify-center text-signal-amber border-signal-amber/50 hover:border-signal-amber"
+              title="快速进入"
+            >
+              <span className="text-xl">⚡</span>
+            </button>
+          </div>
 
           <button
             onClick={() => navigate('/public')}

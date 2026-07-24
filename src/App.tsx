@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from '@/pages/Home'
 import Unlock from '@/pages/Unlock'
 import Room from '@/pages/Room'
+import Quick from '@/pages/Quick'
 import Admin from '@/pages/Admin'
 import Lock from '@/pages/Lock'
 import PublicList from '@/pages/PublicList'
@@ -37,6 +38,14 @@ export default function App() {
             element={
               <LockGuard>
                 <Unlock />
+              </LockGuard>
+            }
+          />
+          <Route
+            path="/quick"
+            element={
+              <LockGuard>
+                <Quick />
               </LockGuard>
             }
           />

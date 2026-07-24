@@ -12,8 +12,8 @@ interface RoomEntry {
 const MAX_PEERS = 2
 /** 每连接每秒最大消息数（超出即丢弃并警告，不断开连接） */
 const RATE_LIMIT = 30
-/** 单条消息体积上限（base64 编码后） */
-const MAX_PAYLOAD = 64 * 1024
+/** 单条消息体积上限（base64 编码后）- 支持图片 */
+const MAX_PAYLOAD = 512 * 1024
 /** 默认消息存活秒数 */
 const DEFAULT_TTL = 60
 

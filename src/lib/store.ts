@@ -7,10 +7,13 @@ import {
   type CipherRoom,
   createCipher,
   decryptText,
+  decryptImage,
   encryptText,
+  encryptImage,
   envFromB64,
   envToB64,
   type Envelope,
+  type EnvImg,
   type EnvMsg,
 } from '@/lib/cipher'
 
@@ -29,6 +32,7 @@ export interface ChatItem {
   ts: number
   left: number
   acked?: 'sent' | 'read'
+  image?: string
 }
 
 interface ChatState {
@@ -41,8 +45,10 @@ interface ChatState {
   peerTyping: boolean
   error: string | null
   rateLeft: number | null
-  connect: (roomId: string, passphrase: string) => Promise<void>
+  ttl: number
+  connect: (roomId: string, passphrase: string, ttl?: number) => Promise<void>
   send: (text: string, sid: string) => Promise<void>
+  sendImage: (dataUrl: string, sid: string) => Promise<void>
   wipe: () => void
   destroy: () => void
   tick: () => void
@@ -63,11 +69,11 @@ export const useChat = create<ChatState>((set, get) => ({
   peerTyping: false,
   error: null,
   rateLeft: null,
+  ttl: 60,
 
-  connect: async (roomId, passphrase) => {
-    set({ conn: 'connecting', error: null, items: [], peerOnline: false })
+  connect: async (roomId, passphrase, ttl = 60) => {
+    set({ conn: 'connecting', error: null, items: [], peerOnline: false, ttl })
     try {
-      // 密钥由房间号 + 口令共同派生，确保同房间同口令的双方得到相同密钥
       const cipher = await createCipher(passphrase, roomId)
       get()._openSocket(roomId, cipher)
     } catch (e) {
@@ -127,7 +133,6 @@ export const useChat = create<ChatState>((set, get) => ({
     if (env.k === 'msg') {
       const cipher = get().cipher
       if (!cipher) return
-      // 去重：同 id 消息可能是共享 store 导致的重复
       if (get().items.some((it) => it.id === env.id)) return
       try {
         const text = await decryptText(cipher.key, env)
@@ -143,7 +148,6 @@ export const useChat = create<ChatState>((set, get) => ({
           },
           ],
         }))
-        // 回复已读
         const socket = get().socket
         if (socket?.readyState === WebSocket.OPEN) {
           socket.send(
@@ -151,7 +155,34 @@ export const useChat = create<ChatState>((set, get) => ({
           )
         }
       } catch {
-        // 解密失败：口令不一致
+        set({ error: 'passphrase-mismatch' })
+      }
+    } else if (env.k === 'img') {
+      const cipher = get().cipher
+      if (!cipher) return
+      if (get().items.some((it) => it.id === env.id)) return
+      try {
+        const image = await decryptImage(cipher.key, env)
+        set((s) => ({
+          items: [
+            ...s.items,
+            {
+              id: env.id,
+              text: '[图片]',
+              sid: env.sid,
+              ts: env.ts,
+              left: env.ttl,
+              image,
+            },
+          ],
+        }))
+        const socket = get().socket
+        if (socket?.readyState === WebSocket.OPEN) {
+          socket.send(
+            JSON.stringify({ t: 'pub', payloadB64: envToB64({ k: 'read', id: env.id }) }),
+          )
+        }
+      } catch {
         set({ error: 'passphrase-mismatch' })
       }
     } else if (env.k === 'typing') {
@@ -170,13 +201,29 @@ export const useChat = create<ChatState>((set, get) => ({
     if (!trimmed) return
     const cipher = get().cipher
     const socket = get().socket
+    const ttl = get().ttl
     if (!cipher || !socket || socket.readyState !== WebSocket.OPEN) return
-    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, 60)
+    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, ttl)
     socket.send(JSON.stringify({ t: 'pub', payloadB64: envToB64(env) }))
     set((s) => ({
       items: [
         ...s.items,
-        { id: env.id, text: trimmed, sid, ts: env.ts, left: 60, acked: 'sent' },
+        { id: env.id, text: trimmed, sid, ts: env.ts, left: ttl, acked: 'sent' },
+      ],
+    }))
+  },
+
+  sendImage: async (dataUrl: string, sid: string) => {
+    const cipher = get().cipher
+    const socket = get().socket
+    const ttl = get().ttl
+    if (!cipher || !socket || socket.readyState !== WebSocket.OPEN) return
+    const env: EnvImg = await encryptImage(cipher.key, dataUrl, sid, ttl)
+    socket.send(JSON.stringify({ t: 'pub', payloadB64: envToB64(env) }))
+    set((s) => ({
+      items: [
+        ...s.items,
+        { id: env.id, text: '[图片]', sid, ts: env.ts, left: ttl, acked: 'sent', image: dataUrl },
       ],
     }))
   },

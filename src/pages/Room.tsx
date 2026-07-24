@@ -384,14 +384,12 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
           type="button"
           onClick={() => setShowEmoji((s) => !s)}
           disabled={disabled}
-          className="btn bg-bone-100 text-ink-950 border-bone-100 hover:bg-bone-200 hover:border-bone-200 hover:text-ink-950 w-10 h-10 p-0 shrink-0"
+          className="btn btn-primary w-10 h-10 p-0 shrink-0"
           title="表情"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-            <line x1="9" y1="9" x2="9.01" y2="9" />
-            <line x1="15" y1="9" x2="15.01" y2="9" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 1024 1024" fill="none" stroke="currentColor" strokeWidth="60" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64z m0 840c-216.1 0-392-175.9-392-392s175.9-392 392-392 392 175.9 392 392-175.9 392-392 392z" />
+            <path d="M316 428c15.5 0 28-12.5 28-28v-28c0-15.5-12.5-28-28-28s-28 12.5-28 28v28c0 15.5 12.5 28 28 28zM708 344c-15.5 0-28 12.5-28 28v28c0 15.5 12.5 28 28 28s28-12.5 28-28v-28c0-15.5-12.5-28-28-28zM708 540c-15.5 0-28 12.5-28 28 0 92.6-75.4 168-168 168s-168-75.4-168-168c0-15.5-12.5-28-28-28s-28 12.5-28 28c0 123.5 100.5 224 224 224s224-100.5 224-224c0-15.5-12.5-28-28-28z" />
           </svg>
         </button>
         <textarea

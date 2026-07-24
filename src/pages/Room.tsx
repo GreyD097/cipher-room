@@ -383,7 +383,6 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
         <button
           type="button"
           onClick={() => setShowEmoji((s) => !s)}
-          disabled={disabled}
           className="btn btn-primary w-10 h-10 p-0 shrink-0"
           title="表情"
         >

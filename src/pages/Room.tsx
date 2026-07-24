@@ -6,7 +6,7 @@ import { makeId } from '@/lib/cipher'
 export default function Room() {
   const { roomId = '' } = useParams()
   const navigate = useNavigate()
-  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, sendImage, destroy, wipe, typing, tick, ttl } =
+  const { conn, peerOnline, items, peerTyping, error, rateLeft, connect, send, destroy, wipe, typing, tick, ttl } =
     useChat()
 
   const [draft, setDraft] = useState('')
@@ -174,7 +174,6 @@ export default function Room() {
         onChange={onType}
         onKeyDown={onKeyDown}
         onSend={onSend}
-        onSendImage={(dataUrl) => sendImage(dataUrl, myId.current)}
         disabled={!peerOnline}
       />
     </main>
@@ -282,11 +281,6 @@ function Bubble({ item, myId }: { item: ChatItem; myId: string }) {
             : 'border-ink-600 text-bone-200 bg-ink-900',
         ].join(' ')}
       >
-        {item.image && (
-          <div className="mb-2">
-            <img src={item.image} alt="" className="max-w-full rounded" />
-          </div>
-        )}
         <div>{item.text}</div>
         <div
           className={[
@@ -321,21 +315,30 @@ function TypingDot() {
   )
 }
 
+const EMOJIS = [
+  '😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😶‍🌫️','😏','😒','🙄','😬','😮‍💨','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','😵‍💫','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾',
+  '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁️','👅','👄','💋','🩸',
+  '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🈳','🈂','🛂','🛃','🛄','🛅','🛗','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️⃣','*️⃣','⏏️','▶️','⏸️','⏯️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','🎶','➕','➖','➗','✖️','💲','💱','™️','©️','®️','〰️','➰','➿','🔚','🔙','🔛','🔝','🔜','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛','🕜','🕝','🕞','🕟','🕠','🕡','🕢','🕣','🕤','🕥','🕦','🕧',
+  '🎉','🎊','🎈','🎁','🎀','🎗️','🎏','🎐','🎑','🧧','🎎','🎖️','🏆','🏅','🥇','🥈','🥉','⭐','🌟','✨','💫','⚡','🔥','💥','☄️','☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','🌪️','🌫️','🌈','☂️','☔','💧','💦','🌊','🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘','🌙','🌚','🌛','🌜','☀️','🌝','🌞','⭐','🌟','🌠','🌌','☁️','⛅','⛈️','🌤️','🌥️','🌦️','🌧️','🌨️','❄️','🌬️','💨','🌪️','🌫️','🌈','☂️','☔','💧','💦','🌊',
+  '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🐣','🐥','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🕸️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔',
+  '🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🍍','🥝','🍅','🫒','🥥','🥑','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🍄','🥜','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🍔','🍟','🍕','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🍡','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','☕','🫖','🍵','🍶','🍾','🍷','🍸','🍹','🍺','🍻','🥂','🥃','🥤','🧋','🧃','🧉','🧊','🥢','🍽️','🍴','🥄','🔪','🏺',
+  '⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🏋️‍♀️','🏋️‍♂️','🤼','🤼‍♀️','🤼‍♂️','🤸','🤸‍♀️','🤸‍♂️','⛹️','⛹️‍♀️','⛹️‍♂️','🤺','🤾','🤾‍♀️','🤾‍♂️','🏌️','🏌️‍♀️','🏌️‍♂️','🏇','🧘','🧘‍♀️','🧘‍♂️','🏄','🏄‍♀️','🏄‍♂️','🏊','🏊‍♀️','🏊‍♂️','🤽','🤽‍♀️','🤽‍♂️','🚣','🚣‍♀️','🚣‍♂️','🧗','🧗‍♀️','🧗‍♂️','🚵','🚵‍♀️','🚵‍♂️','🚴','🚴‍♀️','🚴‍♂️','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🤹‍♀️','🤹‍♂️','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩','🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🦯','🦽','🦼','🛴','🚲','🛵','🏍️','🛺','🚨','🚥','🚦','🛑','🚧','⚓','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🚟','🚠','🚡','🛰️','🚀','🛸','🛎️','🧳','⌛','⏳','⌚','⏰','⏱️','⏲️','🕰️','🕛','🕧','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘','🌙','🌚','🌛','🌜','☀️','🌝','🌞','⭐','🌟','🌠','🌌','☁️','⛅','⛈️','🌤️','🌥️','🌦️','🌧️','🌨️','❄️','🌬️','💨','🌪️','🌫️','🌈','☂️','☔','💧','💦','🌊',
+]
+
 interface ComposerProps {
   value: string
   onChange: (v: string) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSend: () => void
-  onSendImage: (dataUrl: string) => void
   disabled?: boolean
 }
 
 const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Composer(
-  { value, onChange, onKeyDown, onSend, onSendImage, disabled },
+  { value, onChange, onKeyDown, onSend, disabled },
   ref,
 ) {
   const taRef = useRef<HTMLTextAreaElement | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showEmoji, setShowEmoji] = useState(false)
 
   useLayoutEffect(() => {
     const el = taRef.current
@@ -344,73 +347,48 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
     el.style.height = Math.min(128, el.scrollHeight) + 'px'
   }, [value])
 
-  const compressImage = (dataUrl: string, maxWidth = 800, maxHeight = 800, quality = 0.7): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.onload = () => {
-        let width = img.width
-        let height = img.height
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width
-          width = maxWidth
-        }
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height
-          height = maxHeight
-        }
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          resolve(dataUrl)
-          return
-        }
-        ctx.drawImage(img, 0, 0, width, height)
-        const compressed = canvas.toDataURL('image/jpeg', quality)
-        resolve(compressed)
-      }
-      img.onerror = () => resolve(dataUrl)
-      img.src = dataUrl
+  const insertEmoji = (emoji: string) => {
+    const el = taRef.current
+    if (!el) return
+    const start = el.selectionStart ?? value.length
+    const end = el.selectionEnd ?? value.length
+    const newValue = value.slice(0, start) + emoji + value.slice(end)
+    onChange(newValue)
+    requestAnimationFrame(() => {
+      el.focus()
+      const pos = start + emoji.length
+      el.setSelectionRange(pos, pos)
     })
-  }
-
-  const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target?.result as string
-      if (dataUrl) {
-        const compressed = await compressImage(dataUrl)
-        onSendImage(compressed)
-      }
-    }
-    reader.readAsDataURL(file)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
   }
 
   return (
     <div className="border-t hairline mx-auto w-full max-w-[640px] bg-ink-950">
+      {showEmoji && (
+        <div className="px-3 pt-2 pb-1 border-b hairline max-h-48 overflow-y-auto">
+          <div className="grid grid-cols-8 gap-1">
+            {EMOJIS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => insertEmoji(e)}
+                className="w-8 h-8 flex items-center justify-center text-lg hover:bg-ink-800 rounded transition-colors"
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex items-end gap-2 px-3 py-2">
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setShowEmoji((s) => !s)}
           disabled={disabled}
-          className="btn border-ink-600 hover:border-bone-300 text-bone-400 hover:text-bone-200 w-10 h-10 p-0"
-          title="发送图片"
+          className="btn border-ink-600 hover:border-bone-300 text-bone-400 hover:text-bone-200 w-10 h-10 p-0 shrink-0"
+          title="表情"
         >
-          <span className="text-sm">📷</span>
+          <span className="text-lg">😀</span>
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={onFileSelect}
-          className="hidden"
-        />
         <textarea
           ref={(node) => {
             taRef.current = node
@@ -427,7 +405,7 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
         <button
           onClick={onSend}
           disabled={disabled || !value.trim()}
-          className="btn btn-primary px-4"
+          className="btn btn-primary px-4 shrink-0"
         >
           发送 ↵
         </button>

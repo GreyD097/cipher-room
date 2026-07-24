@@ -10,8 +10,8 @@ import { PublicHub } from './publicHub.js'
 const PORT = process.env.PORT || 3001
 
 const server = createServer(app)
-const wssCipher = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 })
-const wssPublic = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 })
+const wssCipher = new WebSocketServer({ noServer: true })
+const wssPublic = new WebSocketServer({ noServer: true })
 
 const hub = new CipherHub({ wss: wssCipher, log: (m) => console.log('[hub]', m) })
 const publicHub = new PublicHub({ wss: wssPublic, log: (m) => console.log('[pub]', m) })

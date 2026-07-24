@@ -90,18 +90,6 @@ export interface EnvMsg {
   ct: string
   ttl: number
   ts: number
-  img?: string
-}
-
-export interface EnvImg {
-  k: 'img'
-  id: string
-  sid: string
-  iv: string
-  ct: string
-  ttl: number
-  ts: number
-  ext: string
 }
 
 export interface EnvTyping {
@@ -114,7 +102,7 @@ export interface EnvRead {
   id: string
 }
 
-export type Envelope = EnvMsg | EnvImg | EnvTyping | EnvRead
+export type Envelope = EnvMsg | EnvTyping | EnvRead
 
 export async function encryptText(
   key: CryptoKey,
@@ -137,30 +125,6 @@ export async function encryptText(
   }
 }
 
-export async function encryptImage(
-  key: CryptoKey,
-  dataUrl: string,
-  sid: string,
-  ttl = 60,
-): Promise<EnvImg> {
-  const iv = new Uint8Array(IV_LEN)
-  crypto.getRandomValues(iv)
-  const base64Data = dataUrl.split(',')[1]
-  const ext = dataUrl.split(';')[0].split('/')[1] || 'png'
-  const bytes = fromB64(base64Data)
-  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes)
-  return {
-    k: 'img',
-    id: makeId(),
-    sid,
-    iv: toB64(iv),
-    ct: toB64(ct),
-    ttl,
-    ts: Date.now(),
-    ext,
-  }
-}
-
 export async function decryptText(key: CryptoKey, env: EnvMsg): Promise<string> {
   const dec = new TextDecoder()
   const plain = await crypto.subtle.decrypt(
@@ -169,15 +133,6 @@ export async function decryptText(key: CryptoKey, env: EnvMsg): Promise<string> 
     fromB64(env.ct),
   )
   return dec.decode(plain)
-}
-
-export async function decryptImage(key: CryptoKey, env: EnvImg): Promise<string> {
-  const plain = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: fromB64(env.iv) },
-    key,
-    fromB64(env.ct),
-  )
-  return `data:image/${env.ext};base64,${toB64(plain)}`
 }
 
 export function makeId(): string {

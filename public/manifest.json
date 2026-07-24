@@ -8,6 +8,9 @@
   "theme_color": "#0A0A0B",
   "orientation": "portrait",
   "id": "com.cipherroom.app",
+  "categories": ["social", "communication", "chat"],
+  "prefer_related_applications": false,
+  "related_applications": [],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -26,5 +29,23 @@
       "sizes": "any",
       "type": "image/svg+xml"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
+    },
+    {
+      "src": "/screenshot-3.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
+    }
+  ],
+  "iarc_rating_id": "e7634717-0733-4bcf-83a7-7cf746553a61"
 }

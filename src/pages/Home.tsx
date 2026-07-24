@@ -86,7 +86,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => navigate('/quick')}
-              className="btn btn-primary w-16 h-16 flex items-center justify-center text-signal-amber border-signal-amber/50 hover:border-signal-amber"
+              className="btn btn-primary w-16 h-16 flex items-center justify-center"
               title="快速进入"
             >
               <span className="text-xl">⚡</span>

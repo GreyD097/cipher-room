@@ -96,7 +96,7 @@ export default function Home() {
         </p>
 
         <div className="space-y-3">
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-stretch">
               <button
                 onClick={() => navigate('/unlock')}
                 className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3 min-h-[80px]"
@@ -111,14 +111,14 @@ export default function Home() {
               </button>
               <button
                 onClick={() => navigate('/quick')}
-                className="btn btn-primary w-16 h-16 flex items-center justify-center shrink-0"
+                className="btn btn-primary w-16 flex items-center justify-center shrink-0"
                 title="快速进入"
               >
                 <span className="text-xl">⚡</span>
               </button>
             </div>
 
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-stretch">
               <button
                 onClick={() => navigate('/public/lobby')}
                 className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3 min-h-[80px]"
@@ -138,7 +138,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => navigate('/public')}
-                className="btn btn-primary w-16 h-16 flex items-center justify-center shrink-0"
+                className="btn btn-primary w-16 flex items-center justify-center shrink-0"
                 title="更多聊天室"
               >
                 <span className="text-xl">···</span>

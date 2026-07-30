@@ -7,6 +7,7 @@ interface PublicMessage {
   nickname: string
   text: string
   ts: number
+  type?: 'text' | 'image'
 }
 
 interface PersistedRoom {
@@ -25,6 +26,8 @@ interface PublicRoomEntry {
 const RATE_LIMIT = 30
 const MAX_PEERS = 50
 const DEFAULT_MAX_MESSAGES = 1000
+const MAX_IMAGE_MESSAGES = 100
+const MAX_MSG_SIZE = 5 * 1024 * 1024
 const DATA_DIR = path.resolve(process.cwd(), 'data')
 const ROOMS_FILE = path.join(DATA_DIR, 'rooms.json')
 // 系统默认聊天室：启动时自动创建，持久化到磁盘；即使磁盘清空也会重建
@@ -152,7 +155,8 @@ export class PublicHub {
     this.broadcast(entry, ws, { t: 'join', nickname, peers: entry.sockets.size })
 
     ws.on('message', (raw) => {
-      if (Buffer.isBuffer(raw) && raw.length > 64 * 1024) {
+      if (Buffer.isBuffer(raw) && raw.length > MAX_MSG_SIZE) {
+        this.send(ws, { t: 'error', reason: 'too big' })
         ws.close(4002, 'too big')
         return
       }
@@ -163,7 +167,7 @@ export class PublicHub {
         ws.close(4003, 'bad json')
         return
       }
-      const m = msg as { t?: string; text?: string }
+      const m = msg as { t?: string; text?: string; type?: 'text' | 'image' }
       if (m.t === 'msg') {
         if (tokens <= 0) {
           this.send(ws, { t: 'error', reason: 'rate' })
@@ -172,15 +176,33 @@ export class PublicHub {
         tokens--
         const text = (m.text || '').trim()
         if (!text) return
+        const isImage = m.type === 'image'
         const message: PublicMessage = {
           id: Math.random().toString(36).slice(2, 12),
           nickname,
           text,
           ts: Date.now(),
+          type: isImage ? 'image' : 'text',
         }
         entry.messages.push(message)
+        // 文本消息：保留最近 maxMessages 条
         if (entry.messages.length > entry.maxMessages) {
           entry.messages = entry.messages.slice(-entry.maxMessages)
+        }
+        // 图片消息：单独限制数量，防止持久化文件膨胀
+        if (isImage) {
+          const imgs = entry.messages.filter((x) => x.type === 'image')
+          if (imgs.length > MAX_IMAGE_MESSAGES) {
+            const toRemove = imgs.length - MAX_IMAGE_MESSAGES
+            let removed = 0
+            entry.messages = entry.messages.filter((x) => {
+              if (x.type === 'image' && removed < toRemove) {
+                removed++
+                return false
+              }
+              return true
+            })
+          }
         }
         this.broadcast(entry, null, { t: 'msg', ...message })
         this.saveRooms()

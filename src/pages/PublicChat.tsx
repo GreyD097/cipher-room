@@ -6,6 +6,7 @@ interface PublicMessage {
   nickname: string
   text: string
   ts: number
+  type?: 'text' | 'image'
 }
 
 export default function PublicChat() {
@@ -22,6 +23,7 @@ export default function PublicChat() {
   const [newNickname, setNewNickname] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const socketRef = useRef<WebSocket | null>(null)
   const sidRef = useRef<string>(Math.random().toString(36).slice(2, 12))
 
@@ -57,7 +59,7 @@ export default function PublicChat() {
       try {
         const msg = JSON.parse(ev.data) as
           | { t: 'welcome'; peers: number; name: string; history: PublicMessage[] }
-          | { t: 'msg'; id: string; nickname: string; text: string; ts: number }
+          | { t: 'msg'; id: string; nickname: string; text: string; ts: number; type?: 'text' | 'image' }
           | { t: 'join'; nickname: string; peers: number }
           | { t: 'leave'; nickname: string; peers: number }
           | { t: 'error'; reason: string }
@@ -67,7 +69,7 @@ export default function PublicChat() {
           setRoomName(msg.name)
           setMessages(msg.history)
         } else if (msg.t === 'msg') {
-          setMessages((prev) => [...prev, { id: msg.id, nickname: msg.nickname, text: msg.text, ts: msg.ts }])
+          setMessages((prev) => [...prev, { id: msg.id, nickname: msg.nickname, text: msg.text, ts: msg.ts, type: msg.type }])
         } else if (msg.t === 'join') {
           setPeers(msg.peers)
         } else if (msg.t === 'leave') {
@@ -80,6 +82,9 @@ export default function PublicChat() {
           } else if (msg.reason === 'rate') {
             setError('发送太快，请稍候')
             setTimeout(() => setError(''), 2000)
+          } else if (msg.reason === 'too big') {
+            setError('图片太大（上限 5MB）')
+            setTimeout(() => setError(''), 3000)
           } else {
             setError('连接错误')
           }
@@ -114,6 +119,33 @@ export default function PublicChat() {
     setDraft('')
     socketRef.current?.send(JSON.stringify({ t: 'msg', text }))
     inputRef.current?.focus()
+  }
+
+  const onPickImage = () => {
+    fileRef.current?.click()
+  }
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('请选择图片文件')
+      setTimeout(() => setError(''), 2000)
+      return
+    }
+    if (file.size > 3.5 * 1024 * 1024) {
+      setError('图片不能超过 3.5MB')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataURL = reader.result as string
+      if (conn !== 'connected') return
+      socketRef.current?.send(JSON.stringify({ t: 'msg', text: dataURL, type: 'image' }))
+    }
+    reader.readAsDataURL(file)
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -208,15 +240,39 @@ export default function PublicChat() {
               <span className="text-[10px] text-signal-amber">{msg.nickname}</span>
               <span className="text-[9px] text-bone-500 tabular">{formatTime(msg.ts)}</span>
             </div>
-            <div className="border border-ink-700 bg-ink-900 px-3 py-2 text-[14px] text-bone-100 break-words whitespace-pre-wrap max-w-[85%]">
-              {msg.text}
-            </div>
+            {msg.type === 'image' ? (
+              <img
+                src={msg.text}
+                alt="图片"
+                className="border border-ink-700 bg-ink-900 max-w-[85%] max-h-80 object-contain cursor-pointer"
+                onClick={() => window.open(msg.text, '_blank')}
+              />
+            ) : (
+              <div className="border border-ink-700 bg-ink-900 px-3 py-2 text-[14px] text-bone-100 break-words whitespace-pre-wrap max-w-[85%]">
+                {msg.text}
+              </div>
+            )}
           </div>
         ))}
       </div>
 
       <div className="border-t hairline mx-auto w-full max-w-[640px] bg-ink-950">
         <div className="flex items-end gap-2 px-3 py-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            onChange={onFileChange}
+            className="hidden"
+          />
+          <button
+            onClick={onPickImage}
+            disabled={conn !== 'connected'}
+            className="btn btn-outline px-3 shrink-0"
+            title="发送图片"
+          >
+            📷
+          </button>
           <textarea
             ref={inputRef}
             value={draft}

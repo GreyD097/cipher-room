@@ -96,12 +96,12 @@ export default function Home() {
         </p>
 
         <div className="space-y-3">
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
               <button
                 onClick={() => navigate('/unlock')}
-                className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3"
+                className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3 min-h-[80px]"
               >
-                <div className="w-8 h-8 rounded-full bg-signal-green/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-signal-green/10 flex items-center justify-center shrink-0">
                   <span className="text-signal-green text-sm">◎</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -111,19 +111,19 @@ export default function Home() {
               </button>
               <button
                 onClick={() => navigate('/quick')}
-                className="btn btn-primary w-16 h-16 flex items-center justify-center"
+                className="btn btn-primary w-16 h-16 flex items-center justify-center shrink-0"
                 title="快速进入"
               >
                 <span className="text-xl">⚡</span>
               </button>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
               <button
                 onClick={() => navigate('/public/lobby')}
-                className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3"
+                className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3 min-h-[80px]"
               >
-                <div className="w-8 h-8 rounded-full bg-signal-amber/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-signal-amber/10 flex items-center justify-center shrink-0">
                   <span className="text-signal-amber text-sm">●</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -138,7 +138,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => navigate('/public')}
-                className="btn btn-outline w-16 h-16 flex items-center justify-center"
+                className="btn btn-primary w-16 h-16 flex items-center justify-center shrink-0"
                 title="更多聊天室"
               >
                 <span className="text-xl">···</span>

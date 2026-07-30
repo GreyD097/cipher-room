@@ -27,6 +27,9 @@ const MAX_PEERS = 50
 const DEFAULT_MAX_MESSAGES = 1000
 const DATA_DIR = path.resolve(process.cwd(), 'data')
 const ROOMS_FILE = path.join(DATA_DIR, 'rooms.json')
+// 系统默认聊天室：启动时自动创建，持久化到磁盘；即使磁盘清空也会重建
+const SYSTEM_ROOM_ID = 'lobby'
+const SYSTEM_ROOM_NAME = '系统大厅'
 
 export interface PublicHubOptions {
   wss: WebSocketServer
@@ -42,7 +45,22 @@ export class PublicHub {
     this.wss = opts.wss
     this.log = opts.log ?? (() => {})
     this.loadRooms()
+    this.ensureSystemRoom()
     this.wss.on('connection', (ws, req) => this.handleConnection(ws, req.url ?? '/'))
+  }
+
+  /** 确保系统默认房间存在；即使磁盘被清空也会重建 */
+  private ensureSystemRoom() {
+    if (!this.rooms.has(SYSTEM_ROOM_ID)) {
+      this.rooms.set(SYSTEM_ROOM_ID, {
+        sockets: new Map(),
+        messages: [],
+        name: SYSTEM_ROOM_NAME,
+        maxMessages: DEFAULT_MAX_MESSAGES,
+      })
+      this.log(`system room ensured: ${SYSTEM_ROOM_ID} "${SYSTEM_ROOM_NAME}"`)
+      this.saveRooms()
+    }
   }
 
   /** 从文件加载房间数据 */
@@ -192,17 +210,23 @@ export class PublicHub {
     return true
   }
 
-  listRooms(): { roomId: string; name: string; peers: number; messages: number }[] {
-    const result: { roomId: string; name: string; peers: number; messages: number }[] = []
+  listRooms(): { roomId: string; name: string; peers: number; messages: number; isSystem?: boolean }[] {
+    const result: { roomId: string; name: string; peers: number; messages: number; isSystem?: boolean }[] = []
     for (const [roomId, entry] of this.rooms) {
       result.push({
         roomId,
         name: entry.name,
         peers: entry.sockets.size,
         messages: entry.messages.length,
+        isSystem: roomId === SYSTEM_ROOM_ID,
       })
     }
-    return result.sort((a, b) => b.peers - a.peers)
+    // 系统房间排第一，其余按在线人数降序
+    return result.sort((a, b) => {
+      if (a.isSystem && !b.isSystem) return -1
+      if (!a.isSystem && b.isSystem) return 1
+      return b.peers - a.peers
+    })
   }
 
   kickRoom(roomId: string): boolean {

@@ -6,6 +6,7 @@ interface RoomItem {
   name: string
   peers: number
   messages: number
+  isSystem?: boolean
 }
 
 export default function PublicList() {
@@ -93,7 +94,14 @@ export default function PublicList() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="text-bone-100 text-[13px]">{room.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-bone-100 text-[13px]">{room.name}</div>
+                      {room.isSystem && (
+                        <span className="text-[9px] tracking-[0.15em] uppercase px-1.5 py-0.5 border border-signal-green/50 text-signal-green">
+                          官方
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-bone-500 mt-0.5 font-mono">
                       {room.roomId}
                     </div>

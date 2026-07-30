@@ -96,42 +96,55 @@ export default function Home() {
         </p>
 
         <div className="space-y-3">
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate('/unlock')}
-              className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3"
-            >
-              <div className="w-8 h-8 rounded-full bg-signal-green/10 flex items-center justify-center">
-                <span className="text-signal-green text-sm">◎</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] text-bone-100">密室</div>
-                <div className="text-[10px] text-bone-400 mt-0.5 truncate">端对端加密 · 2人上限 · 消息自动消失</div>
-              </div>
-            </button>
-            <button
-              onClick={() => navigate('/quick')}
-              className="btn btn-primary w-16 h-16 flex items-center justify-center"
-              title="快速进入"
-            >
-              <span className="text-xl">⚡</span>
-            </button>
-          </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/unlock')}
+                className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-full bg-signal-green/10 flex items-center justify-center">
+                  <span className="text-signal-green text-sm">◎</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] text-bone-100">密室</div>
+                  <div className="text-[10px] text-bone-400 mt-0.5 truncate">端对端加密 · 2人上限 · 消息自动消失</div>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate('/quick')}
+                className="btn btn-primary w-16 h-16 flex items-center justify-center"
+                title="快速进入"
+              >
+                <span className="text-xl">⚡</span>
+              </button>
+            </div>
 
-          <button
-            onClick={() => navigate('/public')}
-            className="btn btn-outline w-full text-left px-4 py-4 flex items-center gap-3"
-          >
-            <div className="w-8 h-8 rounded-full bg-signal-amber/10 flex items-center justify-center">
-              <span className="text-signal-amber text-sm">●</span>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/public/lobby')}
+                className="btn btn-primary flex-1 text-left px-4 py-4 flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-full bg-signal-amber/10 flex items-center justify-center">
+                  <span className="text-signal-amber text-sm">●</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <div className="text-[13px] text-bone-100">系统大厅</div>
+                    <span className="text-[9px] tracking-[0.15em] uppercase px-1.5 py-0.5 border border-signal-green/50 text-signal-green">
+                      官方
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-bone-400 mt-0.5 truncate">默认公共聊天室 · 设置昵称 · 多人聊天</div>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate('/public')}
+                className="btn btn-outline w-16 h-16 flex items-center justify-center"
+                title="更多聊天室"
+              >
+                <span className="text-xl">···</span>
+              </button>
             </div>
-            <div className="flex-1">
-              <div className="text-[13px] text-bone-100">公共聊天室</div>
-              <div className="text-[10px] text-bone-400 mt-0.5">消息持久 · 设置昵称 · 多人聊天</div>
-            </div>
-            <span className="text-bone-500 text-sm">→</span>
-          </button>
-        </div>
+          </div>
 
         <button
           onClick={() => setShowSettings((s) => !s)}

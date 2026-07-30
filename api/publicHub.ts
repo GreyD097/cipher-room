@@ -116,7 +116,7 @@ export class PublicHub {
     }
     const roomId = decodeURIComponent(m[1]).slice(0, 128)
     const params = new URLSearchParams(m[2] || '')
-    const nickname = (params.get('nick') || '').slice(0, 32) || 'anonymous'
+    const nickname = (params.get('nick') || '').slice(0, 32) || '默认用户'
     const sid = params.get('sid') || ''
 
     if (!roomId || !sid) {

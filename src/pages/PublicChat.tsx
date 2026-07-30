@@ -30,7 +30,7 @@ export default function PublicChat() {
   useEffect(() => {
     document.title = `公共聊天室 · ${roomId}`
     const savedNick = localStorage.getItem(`cipher:pub-nick:${roomId}`) || ''
-    const nick = savedNick || 'anonymous'
+    const nick = savedNick || '默认用户'
     setNickname(nick)
     setNewNickname(nick)
     connect(nick)

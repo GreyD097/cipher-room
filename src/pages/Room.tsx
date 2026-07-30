@@ -112,6 +112,11 @@ export default function Room() {
     inputRef.current?.focus()
   }
 
+  const onSendImage = async (dataURL: string) => {
+    typing(false)
+    await send(dataURL, myId.current, 'image')
+  }
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -174,6 +179,7 @@ export default function Room() {
         onChange={onType}
         onKeyDown={onKeyDown}
         onSend={onSend}
+        onSendImage={onSendImage}
         disabled={!peerOnline}
       />
     </main>
@@ -270,18 +276,29 @@ function Banner({ type, children }: { type: 'warn' | 'info'; children: React.Rea
 
 function Bubble({ item, myId }: { item: ChatItem; myId: string }) {
   const isMine = item.sid === myId
+  const isImage = item.ty === 'image'
   return (
     <div className={`my-1.5 flex ${isMine ? 'justify-end' : 'justify-start'}`}>
       <div
         className={[
-          'max-w-[78%] break-words whitespace-pre-wrap px-3 py-2 text-[14px] leading-relaxed select-none',
-          'border',
+          isImage
+            ? 'max-w-[78%] px-2 py-2 select-none border'
+            : 'max-w-[78%] break-words whitespace-pre-wrap px-3 py-2 text-[14px] leading-relaxed select-none border',
           isMine
             ? 'border-bone-300 text-bone-100 bg-ink-900'
             : 'border-ink-600 text-bone-200 bg-ink-900',
         ].join(' ')}
       >
-        <div>{item.text}</div>
+        {isImage ? (
+          <img
+            src={item.text}
+            alt="图片"
+            className="max-w-full max-h-72 object-contain cursor-pointer"
+            onClick={() => window.open(item.text, '_blank')}
+          />
+        ) : (
+          <div>{item.text}</div>
+        )}
         <div
           className={[
             'mt-1 text-[9px] tracking-[0.2em] uppercase text-bone-400 flex gap-2 tabular',
@@ -330,14 +347,16 @@ interface ComposerProps {
   onChange: (v: string) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSend: () => void
+  onSendImage: (dataURL: string) => void
   disabled?: boolean
 }
 
 const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Composer(
-  { value, onChange, onKeyDown, onSend, disabled },
+  { value, onChange, onKeyDown, onSend, onSendImage, disabled },
   ref,
 ) {
   const taRef = useRef<HTMLTextAreaElement | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const [showEmoji, setShowEmoji] = useState(false)
 
   useLayoutEffect(() => {
@@ -361,6 +380,22 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
     })
   }
 
+  const onPickImage = () => fileRef.current?.click()
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) return
+    if (file.size > 3.5 * 1024 * 1024) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataURL = reader.result as string
+      onSendImage(dataURL)
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div className="border-t hairline mx-auto w-full max-w-[640px] bg-ink-950">
       {showEmoji && (
@@ -379,6 +414,13 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
           </div>
         </div>
       )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={onFileChange}
+        className="hidden"
+      />
       <div className="flex items-end gap-2 px-3 py-2">
         <button
           type="button"
@@ -390,6 +432,15 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
             <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64z m0 840c-216.1 0-392-175.9-392-392s175.9-392 392-392 392 175.9 392 392-175.9 392-392 392z" />
             <path d="M316 428c15.5 0 28-12.5 28-28v-28c0-15.5-12.5-28-28-28s-28 12.5-28 28v28c0 15.5 12.5 28 28 28zM708 344c-15.5 0-28 12.5-28 28v28c0 15.5 12.5 28 28 28s28-12.5 28-28v-28c0-15.5-12.5-28-28-28zM708 540c-15.5 0-28 12.5-28 28 0 92.6-75.4 168-168 168s-168-75.4-168-168c0-15.5-12.5-28-28-28s-28 12.5-28 28c0 123.5 100.5 224 224 224s224-100.5 224-224c0-15.5-12.5-28-28-28z" />
           </svg>
+        </button>
+        <button
+          type="button"
+          onClick={onPickImage}
+          disabled={disabled}
+          className="btn btn-primary w-10 h-10 p-0 shrink-0"
+          title="发送图片"
+        >
+          📷
         </button>
         <textarea
           ref={(node) => {

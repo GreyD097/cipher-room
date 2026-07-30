@@ -29,6 +29,7 @@ export interface ChatItem {
   ts: number
   left: number
   acked?: 'sent' | 'read'
+  ty?: 'text' | 'image'
 }
 
 interface ChatState {
@@ -43,7 +44,7 @@ interface ChatState {
   rateLeft: number | null
   ttl: number
   connect: (roomId: string, passphrase: string, ttl?: number) => Promise<void>
-  send: (text: string, sid: string) => Promise<void>
+  send: (text: string, sid: string, ty?: 'text' | 'image') => Promise<void>
   wipe: () => void
   destroy: () => void
   tick: () => void
@@ -140,6 +141,7 @@ export const useChat = create<ChatState>((set, get) => ({
             sid: env.sid,
             ts: env.ts,
             left: env.ttl,
+            ty: env.ty,
           },
           ],
         }))
@@ -163,19 +165,19 @@ export const useChat = create<ChatState>((set, get) => ({
     }
   },
 
-  send: async (text: string, sid: string) => {
+  send: async (text: string, sid: string, ty: 'text' | 'image' = 'text') => {
     const trimmed = text.trim()
     if (!trimmed) return
     const cipher = get().cipher
     const socket = get().socket
     const ttl = get().ttl
     if (!cipher || !socket || socket.readyState !== WebSocket.OPEN) return
-    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, ttl)
+    const env: EnvMsg = await encryptText(cipher.key, trimmed, sid, ttl, ty)
     socket.send(JSON.stringify({ t: 'pub', payloadB64: envToB64(env) }))
     set((s) => ({
       items: [
         ...s.items,
-        { id: env.id, text: trimmed, sid, ts: env.ts, left: ttl, acked: 'sent' },
+        { id: env.id, text: trimmed, sid, ts: env.ts, left: ttl, acked: 'sent', ty },
       ],
     }))
   },
